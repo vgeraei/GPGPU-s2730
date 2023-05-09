@@ -61,7 +61,7 @@
 # 6. GPGPU-SIM was developed primarily by Tor M. Aamodt, Wilson W. L. Fung, 
 # Ali Bakhoda, George L. Yuan, at the University of British Columbia, 
 # Vancouver, BC V6T 1Z4
- 
+
 import sys
 import os
 

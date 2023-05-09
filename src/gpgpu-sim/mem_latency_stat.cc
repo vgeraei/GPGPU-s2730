@@ -275,7 +275,12 @@ void memory_stats_t::memlatstat_print(unsigned n_mem, unsigned gpu_mem_n_bk) {
 
   if (m_memory_config->gpgpu_memlatency_stat) {
     printf("maxmflatency = %d \n", max_mf_latency);
+
     printf("max_icnt2mem_latency = %d \n", max_icnt2mem_latency);
+
+    // Custom add
+    max_icnt2mem_latency = 0;
+
     printf("maxmrqlatency = %d \n", max_mrq_latency);
     // printf("maxdqlatency = %d \n", max_dq_latency);
     printf("max_icnt2sh_latency = %d \n", max_icnt2sh_latency);

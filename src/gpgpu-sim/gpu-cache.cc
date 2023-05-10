@@ -626,6 +626,8 @@ void cache_stats::clear_pw() {
   for (unsigned i = 0; i < NUM_MEM_ACCESS_TYPE; ++i) {
     std::fill(m_stats_pw[i].begin(), m_stats_pw[i].end(), 0);
   }
+
+  L1_custom_stats.clear();
 }
 
 void cache_stats::inc_stats(int access_type, int access_outcome) {
@@ -645,6 +647,11 @@ void cache_stats::inc_stats_pw(int access_type, int access_outcome) {
   if (!check_valid(access_type, access_outcome))
     assert(0 && "Unknown cache access type or access outcome");
   m_stats_pw[access_type][access_outcome]++;
+}
+
+// Custom add
+void cache_stats::inc_L1_mem_req_pw() {
+  L1_custom_stats_pw.increment_mem_req();
 }
 
 void cache_stats::inc_fail_stats(int access_type, int fail_outcome) {
@@ -911,6 +918,19 @@ void cache_stats::get_sub_stats_pw(struct cache_sub_stats_pw &css) const {
   css = t_css;
 }
 
+// Custom add
+
+void cache_stats::get_L1_sub_stats_pw(struct L1_cache_sub_stats_pw &css) const {
+  ///
+  /// Overwrites "css" with the appropriate statistics from this cache.
+  ///
+  
+
+  
+
+  css = L1_cache_sub_stats_pw;
+}
+
 bool cache_stats::check_valid(int type, int status) const {
   ///
   /// Verify a valid access_type/access_status
@@ -1020,6 +1040,11 @@ void baseline_cache::cycle() {
     if (!m_memport->full(mf->size(), mf->get_is_write())) {
       m_miss_queue.pop_front();
       m_memport->push(mf);
+
+      // Implementing traffic injection profiling
+      if (L1_D) {
+        m_stats.inc_L1_mem_req_pw();
+      }
     }
   }
   bool data_port_busy = !m_bandwidth_management.data_port_free();

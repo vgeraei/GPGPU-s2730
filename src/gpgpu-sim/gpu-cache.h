@@ -1004,6 +1004,69 @@ struct cache_sub_stats {
   void print_port_stats(FILE *fout, const char *cache_name) const;
 };
 
+// Custom add
+// Used for collecting AerialVision per-window statistics (L1 custom version)
+struct L1_cache_sub_stats_pw {
+  unsigned mem_req_sent;
+  // unsigned accesses;
+  // unsigned write_misses;
+  // unsigned write_hits;
+  // unsigned write_pending_hits;
+  // unsigned write_res_fails;
+
+  // unsigned read_misses;
+  // unsigned read_hits;
+  // unsigned read_pending_hits;
+  // unsigned read_res_fails;
+
+  L1_cache_sub_stats_pw() { clear(); }
+  void clear() {
+    mem_req_sent = 0;
+    // write_misses = 0;
+    // write_hits = 0;
+    // write_pending_hits = 0;
+    // write_res_fails = 0;
+    // read_misses = 0;
+    // read_hits = 0;
+    // read_pending_hits = 0;
+    // read_res_fails = 0;
+  }
+
+  void increment_mem_req () {
+    mem_req_sent = mem_req_sent + 1;
+  }
+
+  L1_cache_sub_stats_pw &operator+=(const L1_cache_sub_stats_pw &css) {
+    ///
+    /// Overloading += operator to easily accumulate stats
+    ///
+    mem_req_sent += css.mem_req_sent;
+    // write_misses += css.write_misses;
+    // read_misses += css.read_misses;
+    // write_pending_hits += css.write_pending_hits;
+    // read_pending_hits += css.read_pending_hits;
+    // write_res_fails += css.write_res_fails;
+    // read_res_fails += css.read_res_fails;
+    return *this;
+  }
+
+  L1_cache_sub_stats_pw operator+(const L1_cache_sub_stats_pw &cs) {
+    ///
+    /// Overloading + operator to easily accumulate stats
+    ///
+    L1_cache_sub_stats_pw ret;
+    ret.mem_req_sent = mem_req_sent + cs.mem_req_sent;
+    // ret.write_misses = write_misses + cs.write_misses;
+    // ret.read_misses = read_misses + cs.read_misses;
+    // ret.write_pending_hits = write_pending_hits + cs.write_pending_hits;
+    // ret.read_pending_hits = read_pending_hits + cs.read_pending_hits;
+    // ret.write_res_fails = write_res_fails + cs.write_res_fails;
+    // ret.read_res_fails = read_res_fails + cs.read_res_fails;
+    return ret;
+  }
+};
+
+
 // Used for collecting AerialVision per-window statistics
 struct cache_sub_stats_pw {
   unsigned accesses;
@@ -1096,6 +1159,9 @@ class cache_stats {
   // Get per-window cache stats for AerialVision
   void get_sub_stats_pw(struct cache_sub_stats_pw &css) const;
 
+  // Custom add
+  void get_L1_sub_stats_pw(struct L1_cache_sub_stats_pw &css) const;
+
   void sample_cache_port_utility(bool data_port_busy, bool fill_port_busy);
 
  private:
@@ -1106,6 +1172,8 @@ class cache_stats {
   // AerialVision cache stats (per-window)
   std::vector<std::vector<unsigned long long> > m_stats_pw;
   std::vector<std::vector<unsigned long long> > m_fail_stats;
+  struct L1_cache_sub_stats_pw L1_custom_stats;
+
 
   unsigned long long m_cache_port_available_cycles;
   unsigned long long m_cache_data_port_busy_cycles;
@@ -1198,6 +1266,10 @@ class baseline_cache : public cache_t {
   // Per-window sub stats for AerialVision support
   void get_sub_stats_pw(struct cache_sub_stats_pw &css) const {
     m_stats.get_sub_stats_pw(css);
+  }
+
+  void get_L1_sub_stats_pw(struct cache_sub_stats_pw &css) const {
+    m_stats.get_L1_sub_stats_pw(css);
   }
 
   // accessors for cache bandwidth availability

@@ -1042,7 +1042,8 @@ void baseline_cache::cycle() {
       m_memport->push(mf);
 
       // Implementing traffic injection profiling
-      if (L1_D) {
+      // Custom add
+      if (m_name.c_str().rfind("L1D", 0) == 0) { // pos=0 limits the search to the prefix
         m_stats.inc_L1_mem_req_pw();
       }
     }

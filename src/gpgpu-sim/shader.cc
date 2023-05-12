@@ -2620,11 +2620,12 @@ void ldst_unit::cycle() {
                                 m_core->get_gpu()->gpu_tot_sim_cycle;
       
     if (current_cycle % 200 == 0) {
-        struct L1_cache_sub_stats_pw &lcs;
-        m_L1D->get_L1_sub_stats_pw(lcs);
+        struct L1_cache_sub_stats_pw lcs;
+
+        m_L1D->get_stats().get_L1_sub_stats_pw(lcs);
         
-        fprintf("L1DRS: %u %u\n", m_core->get_sid(), lcs->mem_req_sent);
-        lcs->clear();
+        fprintf(stdout, "L1DRS: %u %u\n", m_core->get_sid(), lcs.mem_req_sent);
+        m_L1D->get_stats().clear_L1_stats();
     }
     if (m_config->m_L1D_config.l1_latency > 0) L1_latency_queue_cycle();
   }

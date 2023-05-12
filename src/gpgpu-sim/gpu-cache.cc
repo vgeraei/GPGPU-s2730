@@ -627,7 +627,7 @@ void cache_stats::clear_pw() {
     std::fill(m_stats_pw[i].begin(), m_stats_pw[i].end(), 0);
   }
 
-  L1_custom_stats.clear();
+  L1_custom_stats_pw.clear();
 }
 
 void cache_stats::inc_stats(int access_type, int access_outcome) {
@@ -928,7 +928,13 @@ void cache_stats::get_L1_sub_stats_pw(struct L1_cache_sub_stats_pw &css) const {
 
   
 
-  css = L1_cache_sub_stats_pw;
+  css = L1_custom_stats_pw;
+}
+
+// Custom add
+
+void cache_stats::clear_L1_stats() {
+  L1_custom_stats_pw.clear();
 }
 
 bool cache_stats::check_valid(int type, int status) const {
@@ -1043,7 +1049,8 @@ void baseline_cache::cycle() {
 
       // Implementing traffic injection profiling
       // Custom add
-      if (m_name.c_str().rfind("L1D", 0) == 0) { // pos=0 limits the search to the prefix
+      // if (m_name.c_str().rfind("L1D", 0) == 0) { 
+      if (m_name.c_str()[0] == "L" && m_name.c_str()[1] == "1" && m_name.c_str()[2] == "D") { 
         m_stats.inc_L1_mem_req_pw();
       }
     }

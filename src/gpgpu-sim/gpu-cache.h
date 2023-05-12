@@ -1138,6 +1138,11 @@ class cache_stats {
   // Increment AerialVision cache stats
   void inc_stats_pw(int access_type, int access_outcome);
   void inc_fail_stats(int access_type, int fail_outcome);
+
+  // Custom add
+  void inc_L1_mem_req_pw();
+  void clear_L1_stats();
+
   enum cache_request_status select_stats_status(
       enum cache_request_status probe, enum cache_request_status access) const;
   unsigned long long &operator()(int access_type, int access_outcome,
@@ -1172,7 +1177,7 @@ class cache_stats {
   // AerialVision cache stats (per-window)
   std::vector<std::vector<unsigned long long> > m_stats_pw;
   std::vector<std::vector<unsigned long long> > m_fail_stats;
-  struct L1_cache_sub_stats_pw L1_custom_stats;
+  struct L1_cache_sub_stats_pw L1_custom_stats_pw;
 
 
   unsigned long long m_cache_port_available_cycles;
@@ -1268,7 +1273,7 @@ class baseline_cache : public cache_t {
     m_stats.get_sub_stats_pw(css);
   }
 
-  void get_L1_sub_stats_pw(struct cache_sub_stats_pw &css) const {
+  void get_L1_sub_stats_pw(struct L1_cache_sub_stats_pw &css) const {
     m_stats.get_L1_sub_stats_pw(css);
   }
 

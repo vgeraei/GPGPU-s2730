@@ -2618,14 +2618,17 @@ void ldst_unit::cycle() {
     // Custom add
     unsigned long long current_cycle = m_core->get_gpu()->gpu_sim_cycle +
                                 m_core->get_gpu()->gpu_tot_sim_cycle;
-      
-    if (current_cycle % 200 == 0) {
+    
+
+
+    if (current_cycle % 1000 == 0) {
+        int print_cycle = (int) current_cycle / 1000;
         struct L1_cache_sub_stats_pw lcs;
 
         m_L1D->get_stats().get_L1_sub_stats_pw(lcs);
         
-        fprintf(stdout, "L1DRS: %u %u\n", m_core->get_sid(), lcs.mem_req_sent);
-        m_L1D->get_stats().clear_L1_stats();
+        fprintf(stdout, "L1DRS: %d %u %u\n", print_cycle, m_core->get_sid(), lcs.mem_req_sent);
+        // m_L1D->get_stats().clear_L1_stats();
     }
     if (m_config->m_L1D_config.l1_latency > 0) L1_latency_queue_cycle();
   }

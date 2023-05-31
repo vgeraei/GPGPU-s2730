@@ -933,7 +933,7 @@ void cache_stats::get_L1_sub_stats_pw(struct L1_cache_sub_stats_pw &css) const {
 
 // Custom add
 
-void cache_stats::clear_L1_stats() {
+void cache_stats::clear_L1_stats()  {
   L1_custom_stats_pw.clear();
 }
 
@@ -1050,7 +1050,8 @@ void baseline_cache::cycle() {
       // Implementing traffic injection profiling
       // Custom add
       // if (m_name.c_str().rfind("L1D", 0) == 0) { 
-      if (m_name.c_str()[0] == "L" && m_name.c_str()[1] == "1" && m_name.c_str()[2] == "D") { 
+      std::string name_L1D = "L1D";
+      if (m_name[0] == name_L1D[0] && m_name[1] == name_L1D[1] && m_name[2] == name_L1D[2]) { 
         m_stats.inc_L1_mem_req_pw();
       }
     }

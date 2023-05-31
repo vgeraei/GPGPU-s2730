@@ -1141,7 +1141,7 @@ class cache_stats {
 
   // Custom add
   void inc_L1_mem_req_pw();
-  void clear_L1_stats();
+  void clear_L1_stats() ;
 
   enum cache_request_status select_stats_status(
       enum cache_request_status probe, enum cache_request_status access) const;
@@ -1255,7 +1255,7 @@ class baseline_cache : public cache_t {
   void display_state(FILE *fp) const;
 
   // Stat collection
-  const cache_stats &get_stats() const { return m_stats; }
+  class cache_stats &get_stats() { return m_stats; }
   unsigned get_stats(enum mem_access_type *access_type,
                      unsigned num_access_type,
                      enum cache_request_status *access_status,

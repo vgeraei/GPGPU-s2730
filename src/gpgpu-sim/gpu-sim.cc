@@ -845,6 +845,14 @@ gpgpu_sim::gpgpu_sim(const gpgpu_sim_config &config, gpgpu_context *ctx)
   m_total_cta_launched = 0;
   gpu_deadlock = false;
 
+  // Custom add
+  gpu_stall_dramfull_mem_sub_cumul = new unsigned int [m_memory_config->m_n_mem_sub_partition];
+  gpu_stall_dramfull_mem_sub = new unsigned int [m_memory_config->m_n_mem_sub_partition];
+  for (unsigned i = 0; i < m_memory_config->m_n_mem_sub_partition; i++) {
+    gpu_stall_dramfull_mem_sub_cumul[i] = 0;
+    gpu_stall_dramfull_mem_sub[i] = 0;
+  }
+
   gpu_stall_dramfull = 0;
   gpu_stall_icnt2sh = 0;
   partiton_reqs_in_parallel = 0;
@@ -861,6 +869,7 @@ gpgpu_sim::gpgpu_sim(const gpgpu_sim_config &config, gpgpu_context *ctx)
   m_memory_sub_partition =
       new memory_sub_partition *[m_memory_config->m_n_mem_sub_partition];
   for (unsigned i = 0; i < m_memory_config->m_n_mem; i++) {
+
     m_memory_partition_unit[i] =
         new memory_partition_unit(i, m_memory_config, m_memory_stats, this);
     for (unsigned p = 0;
@@ -1254,6 +1263,16 @@ void gpgpu_sim::gpu_print_stat() {
           gpgpu_ctx->device_runtime->g_max_total_param_size);
 
   // performance counter for stalls due to congestion.
+  // Custom add
+   for (unsigned i = 0; i < m_memory_config->m_n_mem_sub_partition; i++) {
+      printf("gpu_stall_dramfull_sub_cumul%u = %d\n", i, gpu_stall_dramfull_mem_sub_cumul[i]);
+   }
+
+   for (unsigned i = 0; i < m_memory_config->m_n_mem_sub_partition; i++) {
+      printf("gpu_stall_dramfull_sub_%u = %d\n", i, gpu_stall_dramfull_mem_sub[i]);
+      gpu_stall_dramfull_mem_sub[i] = 0;
+   }
+
   printf("gpu_stall_dramfull = %d\n", gpu_stall_dramfull);
   printf("gpu_stall_icnt2sh    = %d\n", gpu_stall_icnt2sh);
 
@@ -1802,6 +1821,9 @@ void gpgpu_sim::cycle() {
       // SECTOR_CHUNCK_SIZE requests, so ensure you have enough buffer for them
       if (m_memory_sub_partition[i]->full(SECTOR_CHUNCK_SIZE)) {
         gpu_stall_dramfull++;
+        // Custom add
+        gpu_stall_dramfull_mem_sub_cumul[i]++;
+        gpu_stall_dramfull_mem_sub[i]++;
       } else {
         mem_fetch *mf = (mem_fetch *)icnt_pop(m_shader_config->mem2device(i));
         m_memory_sub_partition[i]->push(mf, gpu_sim_cycle + gpu_tot_sim_cycle);

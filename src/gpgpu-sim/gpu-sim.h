@@ -647,6 +647,10 @@ class gpgpu_sim : public gpgpu_t {
   occupancy_stats gpu_tot_occupancy;
 
   // performance counter for stalls due to congestion.
+  // Custom add
+  unsigned int *gpu_stall_dramfull_mem_sub_cumul;
+  unsigned int *gpu_stall_dramfull_mem_sub;
+
   unsigned int gpu_stall_dramfull;
   unsigned int gpu_stall_icnt2sh;
   unsigned long long partiton_reqs_in_parallel;

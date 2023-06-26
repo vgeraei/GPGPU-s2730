@@ -1259,7 +1259,9 @@ class ldst_unit : public pipelined_simd_unit {
 
   // modifiers
   virtual void issue(register_set &inst);
-  virtual void cycle();
+
+  // custom add
+  virtual void cycle(std::vector<bool> mc_states);
 
   void fill(mem_fetch *mf);
   void flush();
@@ -2174,7 +2176,8 @@ class shader_core_ctx : public core_t {
 
   void read_operands();
 
-  void execute();
+  // custom add
+  void execute(std::vector<bool> mc_states);
 
   void writeback();
 

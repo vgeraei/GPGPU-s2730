@@ -1039,22 +1039,45 @@ bool baseline_cache::bandwidth_management::fill_port_free() const {
   return (m_fill_port_occupied_cycles == 0);
 }
 
+// custom add
 /// Sends next request to lower level of memory
-void baseline_cache::cycle() {
+void baseline_cache::cycle(std::vector<bool> mc_states) {
   if (!m_miss_queue.empty()) {
+    /*
     mem_fetch *mf = m_miss_queue.front();
     if (!m_memport->full(mf->size(), mf->get_is_write())) {
-      m_miss_queue.pop_front();
-      m_memport->push(mf);
+      // m_miss_queue.pop_front();
+      // m_memport->push(mf);
 
-      // Implementing traffic injection profiling
-      // Custom add
-      // if (m_name.c_str().rfind("L1D", 0) == 0) { 
+      
+
       std::string name_L1D = "L1D";
       if (m_name[0] == name_L1D[0] && m_name[1] == name_L1D[1] && m_name[2] == name_L1D[2]) { 
         m_stats.inc_L1_mem_req_pw();
       }
     }
+    */
+
+    // Implementing traffic injection profiling
+    // Custom add
+    for (std::list<mem_fetch*>::iterator item=m_miss_queue.begin(); item != m_miss_queue.end(); ++item) {
+      unsigned destination = (*item)->get_sub_partition_id();
+      if (mc_states[destionation]) {
+        if (!m_memport->full(mf->size(), mf->get_is_write())) {
+          // m_miss_queue.pop_front();
+          m_miss_queue.erase(item);
+          m_memport->push((*item));
+          // m_memport->push(mf);
+
+          std::string name_L1D = "L1D";
+          if (m_name[0] == name_L1D[0] && m_name[1] == name_L1D[1] && m_name[2] == name_L1D[2]) { 
+            m_stats.inc_L1_mem_req_pw();
+          }
+        }
+        break;
+      }
+    }
+
   }
   bool data_port_busy = !m_bandwidth_management.data_port_free();
   bool fill_port_busy = !m_bandwidth_management.fill_port_free();

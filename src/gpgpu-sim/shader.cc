@@ -1659,13 +1659,14 @@ int shader_core_ctx::test_res_bus(int latency) {
   return -1;
 }
 
-void shader_core_ctx::execute() {
+// custom add
+void shader_core_ctx::execute(std::vector<bool> mc_states) {
   for (unsigned i = 0; i < num_result_bus; i++) {
     *(m_result_bus[i]) >>= 1;
   }
   for (unsigned n = 0; n < m_num_function_units; n++) {
     unsigned multiplier = m_fu[n]->clock_multiplier();
-    for (unsigned c = 0; c < multiplier; c++) m_fu[n]->cycle();
+    for (unsigned c = 0; c < multiplier; c++) m_fu[n]->cycle(mc_states);
     m_fu[n]->active_lanes_in_pipeline();
     unsigned issue_port = m_issue_port[n];
     register_set &issue_inst = m_pipeline_reg[issue_port];
@@ -2548,7 +2549,9 @@ inst->space.get_type() != shared_space) { unsigned warp_id = inst->warp_id();
    pipelined_simd_unit::issue(reg_set);
 }
 */
-void ldst_unit::cycle() {
+
+// custom add
+void ldst_unit::cycle(std::vector<bool> mc_states) {
   writeback();
   for (int i = 0; i < m_config->reg_file_port_throughput; ++i)
     m_operand_collector->step();
@@ -2610,10 +2613,11 @@ void ldst_unit::cycle() {
     }
   }
 
-  m_L1T->cycle();
-  m_L1C->cycle();
+  // custom add
+  m_L1T->cycle(mc_states);
+  m_L1C->cycle(mc_states);
   if (m_L1D) {
-    m_L1D->cycle();
+    m_L1D->cycle(mc_states);
       
     // Custom add
     // unsigned long long current_cycle = m_core->get_gpu()->gpu_sim_cycle +
@@ -3370,12 +3374,13 @@ void shader_core_config::set_pipeline_latency() {
   max_tensor_core_latency = tensor_latency;
 }
 
-void shader_core_ctx::cycle() {
+// Custom add
+void shader_core_ctx::cycle(std::vector<bool> mc_states) {
   if (!isactive() && get_not_completed() == 0) return;
 
   m_stats->shader_cycles[m_sid]++;
   writeback();
-  execute();
+  execute(mc_states);
   read_operands();
   issue();
   for (int i = 0; i < m_config->inst_fetch_throughput; ++i) {
@@ -4146,10 +4151,11 @@ simt_core_cluster::simt_core_cluster(class gpgpu_sim *gpu, unsigned cluster_id,
   m_mem_config = mem_config;
 }
 
-void simt_core_cluster::core_cycle() {
+// Custom add
+void simt_core_cluster::core_cycle(std::vector<bool> mc_states) {
   for (std::list<unsigned>::iterator it = m_core_sim_order.begin();
        it != m_core_sim_order.end(); ++it) {
-    m_core[*it]->cycle();
+    m_core[*it]->cycle(mc_states);
   }
 
   if (m_config->simt_core_sim_order == 1) {
@@ -4319,7 +4325,7 @@ void simt_core_cluster::icnt_inject_request_packet(class mem_fetch *mf) {
   mf->set_status(IN_ICNT_TO_MEM,
                  m_gpu->gpu_sim_cycle + m_gpu->gpu_tot_sim_cycle);
   if (!mf->get_is_write() && !mf->isatomic())
-    ::icnt_push(m_cluster_id, m_config->mem2device(destination), (void *)mf,
+    ::icnt_push(m_cluster_id, m_configcdestination), (void *)mf,
                 mf->get_ctrl_size());
   else
     ::icnt_push(m_cluster_id, m_config->mem2device(destination), (void *)mf,

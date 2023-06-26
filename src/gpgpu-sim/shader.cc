@@ -881,7 +881,7 @@ void shader_core_ctx::decode() {
   }
 }
 
-void shader_core_ctx::fetch() {
+void shader_core_ctx::fetch(std::vector<bool> mc_states) {
   if (!m_inst_fetch_buffer.m_valid) {
     if (m_L1I->access_ready()) {
       mem_fetch *mf = m_L1I->next_access();
@@ -979,8 +979,8 @@ void shader_core_ctx::fetch() {
       }
     }
   }
-
-  m_L1I->cycle();
+  // custom add
+  m_L1I->cycle(mc_states);
 }
 
 void exec_shader_core_ctx::func_exec_inst(warp_inst_t &inst) {
@@ -1666,7 +1666,11 @@ void shader_core_ctx::execute(std::vector<bool> mc_states) {
   }
   for (unsigned n = 0; n < m_num_function_units; n++) {
     unsigned multiplier = m_fu[n]->clock_multiplier();
-    for (unsigned c = 0; c < multiplier; c++) m_fu[n]->cycle(mc_states);
+    for (unsigned c = 0; c < multiplier; c++) {
+        m_fu[n]->cycle(mc_states);
+    }
+    
+     
     m_fu[n]->active_lanes_in_pipeline();
     unsigned issue_port = m_issue_port[n];
     register_set &issue_inst = m_pipeline_reg[issue_port];
@@ -2281,7 +2285,7 @@ pipelined_simd_unit::pipelined_simd_unit(register_set *result_port,
   active_insts_in_pipeline = 0;
 }
 
-void pipelined_simd_unit::cycle() {
+void pipelined_simd_unit::cycle(std::vector<bool> mc_states) {
   if (!m_pipeline_reg[0]->empty()) {
     m_result_port->move_in(m_pipeline_reg[0]);
     assert(active_insts_in_pipeline > 0);
@@ -2614,7 +2618,7 @@ void ldst_unit::cycle(std::vector<bool> mc_states) {
   }
 
   // custom add
-  m_L1T->cycle(mc_states);
+  m_L1T->cycle();
   m_L1C->cycle(mc_states);
   if (m_L1D) {
     m_L1D->cycle(mc_states);
@@ -3385,7 +3389,7 @@ void shader_core_ctx::cycle(std::vector<bool> mc_states) {
   issue();
   for (int i = 0; i < m_config->inst_fetch_throughput; ++i) {
     decode();
-    fetch();
+    fetch(mc_states);
   }
 }
 
@@ -4325,7 +4329,7 @@ void simt_core_cluster::icnt_inject_request_packet(class mem_fetch *mf) {
   mf->set_status(IN_ICNT_TO_MEM,
                  m_gpu->gpu_sim_cycle + m_gpu->gpu_tot_sim_cycle);
   if (!mf->get_is_write() && !mf->isatomic())
-    ::icnt_push(m_cluster_id, m_configcdestination), (void *)mf,
+    ::icnt_push(m_cluster_id, m_config->mem2device(destination), (void *)mf,
                 mf->get_ctrl_size());
   else
     ::icnt_push(m_cluster_id, m_config->mem2device(destination), (void *)mf,

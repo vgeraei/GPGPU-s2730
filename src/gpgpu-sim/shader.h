@@ -1043,7 +1043,9 @@ class simd_function_unit {
     source_reg.move_out_to(m_dispatch_reg);
     occupied.set(m_dispatch_reg->latency);
   }
-  virtual void cycle() = 0;
+
+  // custom add
+  virtual void cycle(std::vector<bool> mc_states) = 0;
   virtual void active_lanes_in_pipeline() = 0;
 
   // accessors
@@ -1073,7 +1075,7 @@ class pipelined_simd_unit : public simd_function_unit {
                       shader_core_ctx *core);
 
   // modifiers
-  virtual void cycle();
+  virtual void cycle(std::vector<bool> mc_states);
   virtual void issue(register_set &source_reg);
   virtual unsigned get_active_lanes_in_pipeline();
 
@@ -2127,7 +2129,7 @@ class shader_core_ctx : public core_t {
 
   int test_res_bus(int latency);
   address_type next_pc(int tid) const;
-  void fetch();
+  void fetch(std::vector<bool> mc_states);
   void register_cta_thread_exit(unsigned cta_num, kernel_info_t *kernel);
 
   void decode();

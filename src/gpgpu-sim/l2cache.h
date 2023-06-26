@@ -68,7 +68,7 @@ class memory_partition_unit {
 
   bool busy() const;
 
-  void cache_cycle(unsigned cycle);
+  void cache_cycle(unsigned cycle, std::vector<bool> mc_states);
   void dram_cycle();
   void simple_dram_model_cycle();
 
@@ -158,7 +158,7 @@ class memory_sub_partition {
 
   bool busy() const;
 
-  void cache_cycle(unsigned cycle);
+  void cache_cycle(unsigned cycle, std::vector<bool> mc_states);
 
   bool full() const;
   bool full(unsigned size) const;

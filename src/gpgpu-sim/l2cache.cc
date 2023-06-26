@@ -182,10 +182,10 @@ bool memory_partition_unit::busy() const {
   return busy;
 }
 
-void memory_partition_unit::cache_cycle(unsigned cycle) {
+void memory_partition_unit::cache_cycle(unsigned cycle, std::vector<bool> mc_states) {
   for (unsigned p = 0; p < m_config->m_n_sub_partition_per_memory_channel;
        p++) {
-    m_sub_partition[p]->cache_cycle(cycle);
+    m_sub_partition[p]->cache_cycle(cycle, mc_states);
   }
 }
 
@@ -445,7 +445,7 @@ memory_sub_partition::~memory_sub_partition() {
   delete m_L2interface;
 }
 
-void memory_sub_partition::cache_cycle(unsigned cycle) {
+void memory_sub_partition::cache_cycle(unsigned cycle, std::vector<bool> mc_states) {
   // L2 fill responses
   if (!m_config->m_L2_config.disabled()) {
     if (m_L2cache->access_ready() && !m_L2_icnt_queue->full()) {
@@ -494,7 +494,7 @@ void memory_sub_partition::cache_cycle(unsigned cycle) {
   }
 
   // prior L2 misses inserted into m_L2_dram_queue here
-  if (!m_config->m_L2_config.disabled()) m_L2cache->cycle();
+  if (!m_config->m_L2_config.disabled()) m_L2cache->cycle(mc_states);
 
   // new L2 texture accesses and/or non-texture accesses
   if (!m_L2_dram_queue->full() && !m_icnt_L2_queue->empty()) {

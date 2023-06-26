@@ -829,6 +829,11 @@ gpgpu_sim::gpgpu_sim(const gpgpu_sim_config &config, gpgpu_context *ctx)
                                              config.g_power_config_name);
 #endif
 
+  // Custom add
+  for (int i = 0; i < m_memory_config->m_n_mem_sub_partition; i++) {
+    mc_states.push_back(true);
+  }
+
   m_shader_stats = new shader_core_stats(m_shader_config);
   m_memory_stats = new memory_stats_t(m_config.num_shader(), m_shader_config,
                                       m_memory_config, this);
@@ -1817,14 +1822,22 @@ void gpgpu_sim::cycle() {
 
 
     // custom add
-/*
-    std::vector<unsigned> sub_partition_priorities;
-    std::vector<unsigned> sub_partition_indexes;
-    for (unsigned i = 0; i < m_memory_config->m_n_mem_sub_partition; i++) {
-        sub_partition_indexes.push_back(i);
-        sub_partition_priorities.push_back(m_memory_sub_partition[i]->calculate_priority());
-    }
 
+    // std::vector<unsigned> sub_partition_priorities;
+    // std::vector<unsigned> sub_partition_indexes;
+    for (unsigned i = 0; i < m_memory_config->m_n_mem_sub_partition; i++) {
+        // sub_partition_indexes.push_back(i);
+        // sub_partition_priorities.push_back(m_memory_sub_partition[i]->calculate_priority());
+
+        unsigned state_value = m_memory_sub_partition[i]->calculate_priority();
+
+        if (state_value > 100)
+          mc_states[i] = false;
+        else if (state_value < 90 && !mc_states[i]) {
+          mc_states[i] = true;
+        }
+    }
+/*
     bool swapped;
     for (int i = 0; i < sub_partition_indexes.size() - 1; i++) {
         swapped = false;
@@ -1888,7 +1901,7 @@ void gpgpu_sim::cycle() {
           m_memory_sub_partition[i]->push(mf, gpu_sim_cycle + gpu_tot_sim_cycle);
           if (mf) partiton_reqs_in_parallel_per_cycle++;
         }
-        m_memory_sub_partition[i]->cache_cycle(gpu_sim_cycle + gpu_tot_sim_cycle);
+        m_memory_sub_partition[i]->cache_cycle(gpu_sim_cycle + gpu_tot_sim_cycle, mc_states);
         m_memory_sub_partition[i]->accumulate_L2cache_stats(
             m_power_stats->pwr_mem_stat->l2_cache_stats[CURRENT_STAT_IDX]);
     }
@@ -1909,7 +1922,7 @@ void gpgpu_sim::cycle() {
     m_power_stats->pwr_mem_stat->core_cache_stats[CURRENT_STAT_IDX].clear();
     for (unsigned i = 0; i < m_shader_config->n_simt_clusters; i++) {
       if (m_cluster[i]->get_not_completed() || get_more_cta_left()) {
-        m_cluster[i]->core_cycle();
+        m_cluster[i]->core_cycle(mc_states);
         *active_sms += m_cluster[i]->get_n_active_sms();
       }
       // Update core icnt/cache stats for GPUWattch

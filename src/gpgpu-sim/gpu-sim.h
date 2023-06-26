@@ -489,6 +489,9 @@ class gpgpu_sim : public gpgpu_t {
   void set_kernel_done(kernel_info_t *kernel);
   void stop_all_running_kernels();
 
+  // Custom add
+  std::vector<bool> mc_states; 
+
   void init();
   void cycle();
   bool active();

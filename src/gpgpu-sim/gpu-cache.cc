@@ -1043,39 +1043,33 @@ bool baseline_cache::bandwidth_management::fill_port_free() const {
 /// Sends next request to lower level of memory
 void baseline_cache::cycle(std::vector<bool> mc_states) {
   if (!m_miss_queue.empty()) {
-    /*
-    mem_fetch *mf = m_miss_queue.front();
-    if (!m_memport->full(mf->size(), mf->get_is_write())) {
-      // m_miss_queue.pop_front();
-      // m_memport->push(mf);
 
-      
+    std::string name_L1D = "L1D";
+    if (m_name[0] == name_L1D[0] && m_name[1] == name_L1D[1] && m_name[2] == name_L1D[2]) { 
+      // Implementing traffic injection profiling
+      // Custom add
+      for (std::list<mem_fetch*>::iterator item=m_miss_queue.begin(); item != m_miss_queue.end(); ++item) {
+        unsigned destination = (*item)->get_sub_partition_id();
+        if (mc_states[destination]) {
+          if (!m_memport->full((*item)->size(), (*item)->get_is_write())) {
+            // m_miss_queue.pop_front();
+            m_miss_queue.erase(item);
+            m_memport->push((*item));
+            // m_memport->push(mf);
 
-      std::string name_L1D = "L1D";
-      if (m_name[0] == name_L1D[0] && m_name[1] == name_L1D[1] && m_name[2] == name_L1D[2]) { 
-        m_stats.inc_L1_mem_req_pw();
-      }
-    }
-    */
-
-    // Implementing traffic injection profiling
-    // Custom add
-    for (std::list<mem_fetch*>::iterator item=m_miss_queue.begin(); item != m_miss_queue.end(); ++item) {
-      unsigned destination = (*item)->get_sub_partition_id();
-      if (mc_states[destionation]) {
-        if (!m_memport->full(mf->size(), mf->get_is_write())) {
-          // m_miss_queue.pop_front();
-          m_miss_queue.erase(item);
-          m_memport->push((*item));
-          // m_memport->push(mf);
-
-          std::string name_L1D = "L1D";
-          if (m_name[0] == name_L1D[0] && m_name[1] == name_L1D[1] && m_name[2] == name_L1D[2]) { 
             m_stats.inc_L1_mem_req_pw();
+
           }
+          break;
         }
-        break;
       }
+    } else {
+      mem_fetch *mf = m_miss_queue.front();
+      if (!m_memport->full(mf->size(), mf->get_is_write())) {
+        m_miss_queue.pop_front();
+        m_memport->push(mf);
+
+        }
     }
 
   }

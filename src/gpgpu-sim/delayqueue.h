@@ -65,6 +65,19 @@ class fifo_pipeline {
     }
   }
 
+  // Custom add
+  unsigned get_size() {
+    unsigned count = 0;
+    fifo_data<T>* current = m_head;
+
+    while (current != NULL) {
+      count++;
+      current = current->m_next;
+    }
+
+    return count;
+  }
+
   void push(T* data) {
     assert(m_length < m_max_len);
     if (m_head) {

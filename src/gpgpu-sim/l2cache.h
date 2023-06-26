@@ -196,6 +196,16 @@ class memory_sub_partition {
     m_memcpy_cycle_offset += 1;
   }
 
+  // Custom add
+  unsigned get_icnt_L2_queue_size() {return m_icnt_L2_queue->get_size();}
+  unsigned get_L2_dram_queue_size() {return m_L2_dram_queue->get_size();}
+  unsigned calculate_priority() {
+    // fprintf(stdout, "L2Q: %u DRAMQ: %u \n", get_icnt_L2_queue_size(), get_L2_dram_queue_size());
+    // return get_icnt_L2_queue_size() + get_L2_dram_queue_size();
+    return get_L2_dram_queue_size();
+    
+    }
+
  private:
   // data
   unsigned m_id;  //< the global sub partition ID

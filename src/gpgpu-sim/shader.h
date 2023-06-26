@@ -1882,7 +1882,9 @@ class shader_core_ctx : public core_t {
 
   // used by simt_core_cluster:
   // modifiers
-  void cycle();
+
+  // custom add
+  void cycle(std::vector<bool> mc_states);
   void reinit(unsigned start_thread, unsigned end_thread,
               bool reset_not_completed);
   void issue_block2core(class kernel_info_t &kernel);
@@ -2304,7 +2306,7 @@ class simt_core_cluster {
                     const memory_config *mem_config, shader_core_stats *stats,
                     memory_stats_t *mstats);
 
-  void core_cycle();
+  void core_cycle(std::vector<bool> mc_states);
   void icnt_cycle();
 
   void reinit();

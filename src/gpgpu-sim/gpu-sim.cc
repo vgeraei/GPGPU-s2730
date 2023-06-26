@@ -1814,25 +1814,85 @@ void gpgpu_sim::cycle() {
   unsigned partiton_reqs_in_parallel_per_cycle = 0;
   if (clock_mask & L2) {
     m_power_stats->pwr_mem_stat->l2_cache_stats[CURRENT_STAT_IDX].clear();
+
+
+    // custom add
+/*
+    std::vector<unsigned> sub_partition_priorities;
+    std::vector<unsigned> sub_partition_indexes;
+    for (unsigned i = 0; i < m_memory_config->m_n_mem_sub_partition; i++) {
+        sub_partition_indexes.push_back(i);
+        sub_partition_priorities.push_back(m_memory_sub_partition[i]->calculate_priority());
+    }
+
+    bool swapped;
+    for (int i = 0; i < sub_partition_indexes.size() - 1; i++) {
+        swapped = false;
+        for (int j = 0; j < sub_partition_indexes.size() - i - 1; j++) {
+            if (sub_partition_priorities[j] > sub_partition_priorities[j + 1]) {
+                unsigned t_priority = sub_partition_priorities[j];
+                sub_partition_priorities[j] = sub_partition_priorities[j + 1];
+                sub_partition_priorities[j + 1] = t_priority;
+
+                unsigned t_index = sub_partition_indexes[j];
+                sub_partition_indexes[j] = sub_partition_indexes[j + 1];
+                sub_partition_indexes[j + 1] = t_index;
+
+                swapped = true;
+            }
+        }
+
+        // If no two elements were swapped by inner loop,
+        // then break
+        if (swapped == false)
+            break;
+    } 
+
+    for (unsigned i = 0; i < sub_partition_indexes.size(); i++) {
+      unsigned p_i = sub_partition_indexes[i];
+      // if (i != p_i)
+        // fprintf(stdout, "i is: %u and p_i is %u \n", i, p_i);
+
+      // move memory request from interconnect into memory partition (if not
+      // backed up) Note:This needs to be called in DRAM clock domain if there
+      // is no L2 cache in the system In the worst case, we may need to push
+      // SECTOR_CHUNCK_SIZE requests, so ensure you have enough buffer for them
+      if (m_memory_sub_partition[p_i]->full(SECTOR_CHUNCK_SIZE)) {
+        gpu_stall_dramfull++;
+        // Custom add
+        gpu_stall_dramfull_mem_sub_cumul[p_i]++;
+        gpu_stall_dramfull_mem_sub[p_i]++;
+      } else {
+        mem_fetch *mf = (mem_fetch *)icnt_pop(m_shader_config->mem2device(p_i));
+        m_memory_sub_partition[p_i]->push(mf, gpu_sim_cycle + gpu_tot_sim_cycle);
+        if (mf) partiton_reqs_in_parallel_per_cycle++;
+      }
+      m_memory_sub_partition[p_i]->cache_cycle(gpu_sim_cycle + gpu_tot_sim_cycle);
+      m_memory_sub_partition[p_i]->accumulate_L2cache_stats(
+          m_power_stats->pwr_mem_stat->l2_cache_stats[CURRENT_STAT_IDX]);
+    }
+*/
+
     for (unsigned i = 0; i < m_memory_config->m_n_mem_sub_partition; i++) {
       // move memory request from interconnect into memory partition (if not
       // backed up) Note:This needs to be called in DRAM clock domain if there
       // is no L2 cache in the system In the worst case, we may need to push
       // SECTOR_CHUNCK_SIZE requests, so ensure you have enough buffer for them
-      if (m_memory_sub_partition[i]->full(SECTOR_CHUNCK_SIZE)) {
-        gpu_stall_dramfull++;
-        // Custom add
-        gpu_stall_dramfull_mem_sub_cumul[i]++;
-        gpu_stall_dramfull_mem_sub[i]++;
-      } else {
-        mem_fetch *mf = (mem_fetch *)icnt_pop(m_shader_config->mem2device(i));
-        m_memory_sub_partition[i]->push(mf, gpu_sim_cycle + gpu_tot_sim_cycle);
-        if (mf) partiton_reqs_in_parallel_per_cycle++;
-      }
-      m_memory_sub_partition[i]->cache_cycle(gpu_sim_cycle + gpu_tot_sim_cycle);
-      m_memory_sub_partition[i]->accumulate_L2cache_stats(
-          m_power_stats->pwr_mem_stat->l2_cache_stats[CURRENT_STAT_IDX]);
+        if (m_memory_sub_partition[i]->full(SECTOR_CHUNCK_SIZE)) {
+          gpu_stall_dramfull++;
+          // Custom add
+          gpu_stall_dramfull_mem_sub_cumul[i]++;
+          gpu_stall_dramfull_mem_sub[i]++;
+        } else {
+          mem_fetch *mf = (mem_fetch *)icnt_pop(m_shader_config->mem2device(i));
+          m_memory_sub_partition[i]->push(mf, gpu_sim_cycle + gpu_tot_sim_cycle);
+          if (mf) partiton_reqs_in_parallel_per_cycle++;
+        }
+        m_memory_sub_partition[i]->cache_cycle(gpu_sim_cycle + gpu_tot_sim_cycle);
+        m_memory_sub_partition[i]->accumulate_L2cache_stats(
+            m_power_stats->pwr_mem_stat->l2_cache_stats[CURRENT_STAT_IDX]);
     }
+    
   }
   partiton_reqs_in_parallel += partiton_reqs_in_parallel_per_cycle;
   if (partiton_reqs_in_parallel_per_cycle > 0) {

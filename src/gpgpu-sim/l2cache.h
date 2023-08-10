@@ -202,9 +202,21 @@ class memory_sub_partition {
   unsigned calculate_priority() {
     // fprintf(stdout, "L2Q: %u DRAMQ: %u \n", get_icnt_L2_queue_size(), get_L2_dram_queue_size());
     // return get_icnt_L2_queue_size() + get_L2_dram_queue_size();
-    return get_L2_dram_queue_size();
+    return get_icnt_L2_queue_size();
     
     }
+  
+  // Custom add
+  void print_all_queues() {
+    unsigned icnt_L2_size = m_icnt_L2_queue->get_size();
+    unsigned L2_dram_size = m_L2_dram_queue->get_size();
+    unsigned dram_L2_size = m_dram_L2_queue->get_size();
+    unsigned L2_icnt_size = m_L2_icnt_queue->get_size();
+     
+     if (icnt_L2_size > 40)
+      fprintf(stdout, "ICNT->L2: %u   L2->DRAM: %u   DRAM->L2: %u   L2->ICNT: %u \n", 
+        icnt_L2_size, L2_dram_size, dram_L2_size, L2_icnt_size);
+  }
 
  private:
   // data

@@ -1045,13 +1045,18 @@ void baseline_cache::cycle(std::vector<bool> mc_states) {
   if (!m_miss_queue.empty()) {
 
     std::string name_L1D = "L1D";
-    if (m_name[0] == name_L1D[0] && m_name[1] == name_L1D[1] && m_name[2] == name_L1D[2]) { 
+    // Custom add: L1D condition 
+    bool L1D_condition =  (m_name[0] == name_L1D[0] && m_name[1] == name_L1D[1] && m_name[2] == name_L1D[2]);
+
+    // m_name[0] == name_L1D[0] && m_name[1] == name_L1D[1] && m_name[2] == name_L1D[2]
+    if (L1D_condition) { 
       // Implementing traffic injection profiling
       // Custom add
       for (std::list<mem_fetch*>::iterator item=m_miss_queue.begin(); item != m_miss_queue.end(); ++item) {
         unsigned destination = (*item)->get_sub_partition_id();
         if (mc_states[destination]) {
           if (!m_memport->full((*item)->size(), (*item)->get_is_write())) {
+            
             // m_miss_queue.pop_front();
             m_miss_queue.erase(item);
             m_memport->push((*item));
@@ -1061,11 +1066,27 @@ void baseline_cache::cycle(std::vector<bool> mc_states) {
 
           }
           break;
+        } 
+        /*
+        else {
+          fprintf(stdout, "Busy MC %u\n", destination);
         }
+        */
       }
     } else {
+     
+      
       mem_fetch *mf = m_miss_queue.front();
       if (!m_memport->full(mf->size(), mf->get_is_write())) {
+
+        // Custom add: adding MSHR info to memory requests if it is L1D cache
+        /*
+        if (L1D_condition) {
+          unsigned temp_num_entries = m_mshrs.get_num_entries();
+          mf->set_num_mshr_entries(temp_num_entries);
+          m_extra_mf_fields[mf].m_data_size = mf->get_data_size();
+        }*/
+
         m_miss_queue.pop_front();
         m_memport->push(mf);
 

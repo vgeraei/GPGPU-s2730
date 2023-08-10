@@ -499,6 +499,43 @@ void memory_sub_partition::cache_cycle(unsigned cycle, std::vector<bool> mc_stat
   // new L2 texture accesses and/or non-texture accesses
   if (!m_L2_dram_queue->full() && !m_icnt_L2_queue->empty()) {
     mem_fetch *mf = m_icnt_L2_queue->top();
+
+
+    
+    // Custom add: Memory controller prioritization
+    /*
+    struct fifo_data<mem_fetch>* mf_it = m_icnt_L2_queue->get_head();
+    struct fifo_data<mem_fetch>* mf_max = m_icnt_L2_queue->get_head();
+    unsigned max_mshr_size = 0;
+
+    while (mf_it != NULL) {
+      unsigned mf_mshr_num = mf_it->m_data->get_num_mshr_entries();
+
+      if (mf_mshr_num > max_mshr_size) {
+        max_mshr_size = mf_mshr_num;
+        mf_max = mf_it;
+      }
+      mf_it = mf_it->m_next;
+    }
+
+    mf_it = m_icnt_L2_queue->get_head();
+    while (mf_it != mf_max) {
+      unsigned mf_sid = mf_it->m_data->get_sid();
+
+      if (mf_sid == mf_max->m_data->get_sid()) {
+        mf_max = mf_it;
+        break;
+      }
+      mf_it = mf_it->m_next;
+
+    }
+
+    if (mf != mf_max->m_data) {
+      mf = mf_max->m_data;
+    }
+    */
+
+
     if (!m_config->m_L2_config.disabled() &&
         ((m_config->m_L2_texure_only && mf->istexture()) ||
          (!m_config->m_L2_texure_only))) {
@@ -530,9 +567,21 @@ void memory_sub_partition::cache_cycle(unsigned cycle, std::vector<bool> mc_stat
                              m_gpu->gpu_sim_cycle + m_gpu->gpu_tot_sim_cycle);
               m_L2_icnt_queue->push(mf);
             }
+
+            // Custom add: deleting a specific mf
             m_icnt_L2_queue->pop();
+            // m_icnt_L2_queue->pop_element(mf);
+
+            
+            
+
+            
+
           } else {
             assert(write_sent);
+
+            // Custom add: deleting a specific mf
+            // m_icnt_L2_queue->pop_element(mf);
             m_icnt_L2_queue->pop();
           }
         } else if (status != RESERVATION_FAIL) {
@@ -547,6 +596,8 @@ void memory_sub_partition::cache_cycle(unsigned cycle, std::vector<bool> mc_stat
             m_L2_icnt_queue->push(mf);
           }
           // L2 cache accepted request
+          // Custom add: deleting a specific mf
+          // m_icnt_L2_queue->pop_element(mf);
           m_icnt_L2_queue->pop();
         } else {
           assert(!write_sent);
@@ -558,8 +609,13 @@ void memory_sub_partition::cache_cycle(unsigned cycle, std::vector<bool> mc_stat
       // L2 is disabled or non-texture access to texture-only L2
       mf->set_status(IN_PARTITION_L2_TO_DRAM_QUEUE,
                      m_gpu->gpu_sim_cycle + m_gpu->gpu_tot_sim_cycle);
+                     
       m_L2_dram_queue->push(mf);
+
+      // Custom add: deleting a specific mf
       m_icnt_L2_queue->pop();
+      // m_icnt_L2_queue->pop_element(mf);
+      
     }
   }
 

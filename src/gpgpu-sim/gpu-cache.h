@@ -922,6 +922,8 @@ class mshr_table {
            "Change of MSHR parameters between kernels is not allowed");
   }
 
+  unsigned get_num_entries() { return m_data.size(); }
+
  private:
   // finite sized, fully associative table, with a finite maximum number of
   // merged requests

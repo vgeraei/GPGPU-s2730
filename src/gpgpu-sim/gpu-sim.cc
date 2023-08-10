@@ -834,6 +834,8 @@ gpgpu_sim::gpgpu_sim(const gpgpu_sim_config &config, gpgpu_context *ctx)
     mc_states.push_back(true);
   }
 
+
+
   m_shader_stats = new shader_core_stats(m_shader_config);
   m_memory_stats = new memory_stats_t(m_config.num_shader(), m_shader_config,
                                       m_memory_config, this);
@@ -1830,12 +1832,25 @@ void gpgpu_sim::cycle() {
         // sub_partition_priorities.push_back(m_memory_sub_partition[i]->calculate_priority());
 
         unsigned state_value = m_memory_sub_partition[i]->calculate_priority();
+        // Custom add
+        // if (i == 12) {
+        //   m_memory_sub_partition[i]->print_all_queues();
+        // }
 
-        if (state_value > 100)
+
+        if (state_value > 60) {
           mc_states[i] = false;
-        else if (state_value < 90 && !mc_states[i]) {
+          // fprintf(stdout, "MC #%u is busy %u\n", i, state_value);
+        } else if (!mc_states[i]){
           mc_states[i] = true;
         }
+        /*
+        else if (state_value < 55 && !mc_states[i]) {
+          mc_states[i] = true;
+        } else if (!mc_states[i]) {
+          fprintf(stdout, "MC #%u is still busy %u\n", i, state_value);
+        }
+        */
     }
 /*
     bool swapped;

@@ -128,7 +128,14 @@ class mem_fetch {
   mem_fetch *get_original_mf() { return original_mf; }
   mem_fetch *get_original_wr_mf() { return original_wr_mf; }
 
+  // Custom add MSHR information
+  unsigned get_num_mshr_entries() { return m_mshr_entries; }
+  void set_num_mshr_entries(unsigned value) { m_mshr_entries = value; }
+
  private:
+  // Custom add MSHR information
+  unsigned m_mshr_entries;
+
   // request source information
   unsigned m_request_uid;
   unsigned m_sid;

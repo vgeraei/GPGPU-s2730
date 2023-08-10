@@ -1693,6 +1693,11 @@ struct shader_core_stats_pod {
   unsigned *gpgpu_n_shmem_bank_access;
   long *n_simt_to_mem;  // Interconnect power stats
   long *n_mem_to_simt;
+
+  // Custom add: separate shader stall profiling (one for each type of stall)
+  unsigned *gpgpu_shader_idle_stalls;
+  unsigned *gpgpu_shader_scoreboard_stalls;
+  unsigned *gpgpu_shader_pipeline_stalls;
 };
 
 class shader_core_stats : public shader_core_stats_pod {
@@ -1799,6 +1804,11 @@ class shader_core_stats : public shader_core_stats_pod {
 
     m_shader_dynamic_warp_issue_distro.resize(config->num_shader());
     m_shader_warp_slot_issue_distro.resize(config->num_shader());
+
+    // Custom add: separate shader stall profiling (one for each type of stall)
+    gpgpu_shader_idle_stalls = (unsigned *)calloc(config->num_shader(), sizeof(unsigned));
+    gpgpu_shader_scoreboard_stalls = (unsigned *)calloc(config->num_shader(), sizeof(unsigned));
+    gpgpu_shader_pipeline_stalls = (unsigned *)calloc(config->num_shader(), sizeof(unsigned));
   }
 
   ~shader_core_stats() {

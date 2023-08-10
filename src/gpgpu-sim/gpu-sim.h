@@ -619,6 +619,7 @@ class gpgpu_sim : public gpgpu_t {
   const memory_config *m_memory_config;
 
   // stats
+
   class shader_core_stats *m_shader_stats;
   class memory_stats_t *m_memory_stats;
   class power_stat_t *m_power_stats;

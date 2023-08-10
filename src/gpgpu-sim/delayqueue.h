@@ -124,9 +124,72 @@ class fifo_pipeline {
     return data;
   }
 
+  T* pop_element(T* element) {
+    fifo_data<T>* element_iterator = m_head;
+    fifo_data<T>* next;
+    T* data;
+
+    if ((m_head == m_tail || element == m_head->m_data) && m_head) {
+      data = pop();
+      return data;
+    } else if (m_head) {
+      while (element_iterator) {
+        next = element_iterator->m_next;
+        T* next_data = next->m_data;
+
+        if (element == next_data) {
+          element_iterator->m_next = next->m_next;
+          data = next_data;
+          if (next == m_tail) {
+            m_tail = element_iterator;
+          }
+
+          delete next;
+
+          m_length--;
+          if (m_length == 0) {
+            assert(m_head == NULL);
+            m_tail = m_head;
+          }
+
+          m_n_element--;
+          if (m_min_len && m_length < m_min_len) {
+            push(NULL);
+            m_n_element--;  // uncount NULL elements inserted to create delays
+          }
+          element_iterator = NULL;
+        } else {
+          element_iterator = element_iterator->m_next;
+        }
+      }
+    } else {
+      return pop();
+    }
+    return data;
+  }
+
   T* top() const {
     if (m_head) {
       return m_head->m_data;
+    } else {
+      return NULL;
+    }
+  }
+
+
+  // Custom add
+  struct fifo_data<T>* get_head() {
+    if (m_head) {
+      return m_head;
+    } else {
+      return NULL;
+    }
+  }
+
+  // Custom add
+  struct fifo_data<T>* get_tail() {
+    if (m_tail) {
+      return m_tail;
     } else {
       return NULL;
     }

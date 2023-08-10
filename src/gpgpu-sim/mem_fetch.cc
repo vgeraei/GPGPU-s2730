@@ -42,6 +42,9 @@ mem_fetch::mem_fetch(const mem_access_t &access, const warp_inst_t *inst,
     : m_access(access)
 
 {
+  // Custom add
+  m_mshr_entries = 0;
+
   m_request_uid = sm_next_mf_request_uid++;
   m_access = access;
   if (inst) {

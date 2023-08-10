@@ -694,6 +694,22 @@ void shader_core_stats::print(FILE *fout) const {
   for (unsigned i = 3; i < m_config->warp_size + 3; i++)
     fprintf(fout, "\tW%d:%d", i - 2, shader_cycle_distro[i]);
   fprintf(fout, "\n");
+  // Custom add, printing stalls per core
+  fprintf(fout, "Stalls per core (pipeline): ");
+  for (unsigned i = 0; i < m_config->num_shader(); i++)
+    fprintf(fout, "%u ", gpgpu_shader_pipeline_stalls[i]);
+  fprintf(fout, "\n");
+
+  fprintf(fout, "Stalls per core (idle): ");
+  for (unsigned i = 0; i < m_config->num_shader(); i++)
+    fprintf(fout, "%u ", gpgpu_shader_idle_stalls[i]);
+  fprintf(fout, "\n");
+
+  fprintf(fout, "Stalls per core (scoreboard): ");
+  for (unsigned i = 0; i < m_config->num_shader(); i++)
+    fprintf(fout, "%u ", gpgpu_shader_scoreboard_stalls[i]);
+  fprintf(fout, "\n");
+  
   fprintf(fout, "single_issue_nums: ");
   for (unsigned i = 0; i < m_config->gpgpu_num_sched_per_core; i++)
     fprintf(fout, "WS%d:%d\t", i, single_issue_nums[i]);
@@ -1420,13 +1436,27 @@ void scheduler_unit::cycle() {
   }
 
   // issue stall statistics:
-  if (!valid_inst)
+
+  // Custom add number of the shader and profiling stalls with regards to separate cores
+  unsigned num_shader = m_shader->get_sid();
+
+  if (!valid_inst) {
     m_stats->shader_cycle_distro[0]++;  // idle or control hazard
-  else if (!ready_inst)
+
+    // Custom add
+    m_stats->gpgpu_shader_idle_stalls[num_shader]++;
+  } else if (!ready_inst) {
     m_stats->shader_cycle_distro[1]++;  // waiting for RAW hazards (possibly due
                                         // to memory)
-  else if (!issued_inst)
+
+    // Custom add
+    m_stats->gpgpu_shader_scoreboard_stalls[num_shader]++;
+  } else if (!issued_inst) {
     m_stats->shader_cycle_distro[2]++;  // pipeline stalled
+
+    // Custom add
+    m_stats->gpgpu_shader_pipeline_stalls[num_shader]++;
+  }
 }
 
 void scheduler_unit::do_on_warp_issued(

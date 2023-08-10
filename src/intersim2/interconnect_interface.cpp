@@ -476,6 +476,12 @@ void InterconnectInterface::_CreateNodeMap(unsigned n_shader, unsigned n_mem, un
     }
   }
 
+  fprintf(stdout, "Interconnection scheme:\n");
+  for (unsigned i = 0; i < n_node ; i++) {
+    fprintf(stdout, "%u ", _node_map[i]);
+  }
+  fprintf(stdout, "\n");
+
   //FIXME: should compatible with non-square number
   _DisplayMap((int) sqrt(n_node), n_node);
 

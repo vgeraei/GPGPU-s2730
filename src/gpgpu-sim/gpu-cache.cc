@@ -1049,7 +1049,7 @@ void baseline_cache::cycle(std::vector<bool> mc_states) {
     bool L1D_condition =  (m_name[0] == name_L1D[0] && m_name[1] == name_L1D[1] && m_name[2] == name_L1D[2]);
 
     // m_name[0] == name_L1D[0] && m_name[1] == name_L1D[1] && m_name[2] == name_L1D[2]
-    if (L1D_condition) { 
+    if (false) { 
       // Implementing traffic injection profiling
       // Custom add
       for (std::list<mem_fetch*>::iterator item=m_miss_queue.begin(); item != m_miss_queue.end(); ++item) {

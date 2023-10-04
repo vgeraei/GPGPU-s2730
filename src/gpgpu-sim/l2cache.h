@@ -213,7 +213,7 @@ class memory_sub_partition {
     unsigned dram_L2_size = m_dram_L2_queue->get_size();
     unsigned L2_icnt_size = m_L2_icnt_queue->get_size();
      
-     if (icnt_L2_size > 40)
+     if (icnt_L2_size > 40 || L2_dram_size > 40 || dram_L2_size > 40 || L2_icnt_size > 40)
       fprintf(stdout, "ICNT->L2: %u   L2->DRAM: %u   DRAM->L2: %u   L2->ICNT: %u \n", 
         icnt_L2_size, L2_dram_size, dram_L2_size, L2_icnt_size);
   }

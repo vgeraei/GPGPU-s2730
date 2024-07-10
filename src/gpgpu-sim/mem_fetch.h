@@ -103,6 +103,10 @@ class mem_fetch {
   void set_return_timestamp(unsigned t) { m_timestamp2 = t; }
   void set_icnt_receive_time(unsigned t) { m_icnt_receive_time = t; }
   unsigned get_timestamp() const { return m_timestamp; }
+  // Custom add
+  unsigned get_icnt_timestamp() const { return m_icnt_timestamp; }
+  void set_icnt_timestamp(unsigned t_time) { m_icnt_timestamp = t_time; }
+
   unsigned get_return_timestamp() const { return m_timestamp2; }
   unsigned get_icnt_receive_time() const { return m_icnt_receive_time; }
 
@@ -162,6 +166,11 @@ class mem_fetch {
   // statistics
   unsigned
       m_timestamp;  // set to gpu_sim_cycle+gpu_tot_sim_cycle at struct creation
+
+  // Custom add
+  unsigned
+      m_icnt_timestamp;
+  
   unsigned m_timestamp2;  // set to gpu_sim_cycle+gpu_tot_sim_cycle when pushed
                           // onto icnt to shader; only used for reads
   unsigned m_icnt_receive_time;  // set to gpu_sim_cycle + interconnect_latency

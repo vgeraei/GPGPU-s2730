@@ -91,6 +91,8 @@ memory_stats_t::memory_stats_t(unsigned n_shader,
   max_icnt2mem_latency = 0;
   max_icnt2sh_latency = 0;
   tot_icnt2mem_latency = 0;
+  // Custom add
+  tot_icnt_latency = 0;
   tot_icnt2sh_latency = 0;
   tot_mrq_num = 0;
   tot_mrq_latency = 0;
@@ -250,6 +252,12 @@ void memory_stats_t::memlatstat_icnt2mem_pop(mem_fetch *mf) {
     unsigned icnt2mem_latency;
     icnt2mem_latency =
         (m_gpu->gpu_tot_sim_cycle + m_gpu->gpu_sim_cycle) - mf->get_timestamp();
+
+    // Custom add
+    unsigned icnt_latency;
+    icnt2mem_latency =
+        (m_gpu->gpu_tot_sim_cycle + m_gpu->gpu_sim_cycle) - mf->get_icnt_timestamp();
+
     tot_icnt2mem_latency += icnt2mem_latency;
     icnt2mem_lat_table[LOGB2(icnt2mem_latency)]++;
     if (icnt2mem_latency > max_icnt2mem_latency)
@@ -287,6 +295,7 @@ void memory_stats_t::memlatstat_print(unsigned n_mem, unsigned gpu_mem_n_bk) {
     if (num_mfs) {
       printf("averagemflatency = %lld \n", mf_total_lat / num_mfs);
       printf("avg_icnt2mem_latency = %lld \n", tot_icnt2mem_latency / num_mfs);
+      printf("avg_icnt_latency = %lld \n", tot_icnt_latency / num_mfs);
       if (tot_mrq_num)
         printf("avg_mrq_latency = %lld \n", tot_mrq_latency / tot_mrq_num);
 

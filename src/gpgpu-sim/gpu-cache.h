@@ -1144,6 +1144,7 @@ class cache_stats {
   // Custom add
   void inc_L1_mem_req_pw();
   void clear_L1_stats() ;
+  void inc_L2_stats(int kernel_num);
 
   enum cache_request_status select_stats_status(
       enum cache_request_status probe, enum cache_request_status access) const;
@@ -1185,6 +1186,11 @@ class cache_stats {
   unsigned long long m_cache_port_available_cycles;
   unsigned long long m_cache_data_port_busy_cycles;
   unsigned long long m_cache_fill_port_busy_cycles;
+
+
+  // Custom add (contention tracking)
+  unsigned long long l2_misses_k1;
+  unsigned long long l2_misses_k2;
 };
 
 class cache_t {

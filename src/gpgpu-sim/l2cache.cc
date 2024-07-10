@@ -500,8 +500,6 @@ void memory_sub_partition::cache_cycle(unsigned cycle, std::vector<bool> mc_stat
   if (!m_L2_dram_queue->full() && !m_icnt_L2_queue->empty()) {
     mem_fetch *mf = m_icnt_L2_queue->top();
 
-
-    
     // Custom add: Memory controller prioritization
     /*
     struct fifo_data<mem_fetch>* mf_it = m_icnt_L2_queue->get_head();
@@ -615,7 +613,6 @@ void memory_sub_partition::cache_cycle(unsigned cycle, std::vector<bool> mc_stat
       // Custom add: deleting a specific mf
       m_icnt_L2_queue->pop();
       // m_icnt_L2_queue->pop_element(mf);
-      
     }
   }
 

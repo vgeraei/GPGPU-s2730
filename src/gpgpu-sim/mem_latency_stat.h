@@ -63,6 +63,8 @@ class memory_stats_t {
   unsigned max_mf_latency;
   unsigned max_icnt2mem_latency;
   unsigned long long int tot_icnt2mem_latency;
+  // Custom add
+  unsigned long long int tot_icnt_latency;
   unsigned long long int tot_icnt2sh_latency;
   unsigned long long int tot_mrq_latency;
   unsigned long long int tot_mrq_num;

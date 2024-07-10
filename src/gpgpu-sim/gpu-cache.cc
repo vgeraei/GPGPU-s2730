@@ -604,6 +604,10 @@ cache_stats::cache_stats() {
   m_cache_port_available_cycles = 0;
   m_cache_data_port_busy_cycles = 0;
   m_cache_fill_port_busy_cycles = 0;
+
+  // Custom add (contention tracking L2)
+  l2_misses_k1 = 0;
+  l2_misses_k2 = 0;
 }
 
 void cache_stats::clear() {
@@ -937,6 +941,16 @@ void cache_stats::clear_L1_stats()  {
   L1_custom_stats_pw.clear();
 }
 
+// Custom add
+
+void cache_stats::inc_L2_stats(int kernel_number) {
+  if(kernel_number == 1) {
+    l2_misses_k1++;
+  } else if (kernel_number == 2) {
+    l2_misses_k2++;
+  }
+}
+
 bool cache_stats::check_valid(int type, int status) const {
   ///
   /// Verify a valid access_type/access_status
@@ -1061,7 +1075,9 @@ void baseline_cache::cycle(std::vector<bool> mc_states) {
             m_miss_queue.erase(item);
             m_memport->push((*item));
             // m_memport->push(mf);
+            // m_gpu->gpu_tot_sim_cycle + m_gpu->gpu_sim_cycle
 
+            // (*item)->set_icnt_timestamp(m_gpu->gpu_tot_sim_cycle + m_gpu->gpu_sim_cycle);
             m_stats.inc_L1_mem_req_pw();
 
           }
@@ -1086,7 +1102,7 @@ void baseline_cache::cycle(std::vector<bool> mc_states) {
           mf->set_num_mshr_entries(temp_num_entries);
           m_extra_mf_fields[mf].m_data_size = mf->get_data_size();
         }*/
-
+        // mf->set_icnt_timestamp(m_gpu->gpu_tot_sim_cycle + m_gpu->gpu_sim_cycle);
         m_miss_queue.pop_front();
         m_memport->push(mf);
 

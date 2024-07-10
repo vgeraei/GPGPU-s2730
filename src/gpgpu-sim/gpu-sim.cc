@@ -1838,7 +1838,7 @@ void gpgpu_sim::cycle() {
         // }
 
 
-        if (state_value > 60) {
+        if (state_value > 10) {
           mc_states[i] = false;
           // fprintf(stdout, "MC #%u is busy %u\n", i, state_value);
         } else if (!mc_states[i]){

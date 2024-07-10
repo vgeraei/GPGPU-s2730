@@ -4403,6 +4403,12 @@ void simt_core_cluster::icnt_cycle() {
     m_response_fifo.push_back(mf);
     m_stats->n_mem_to_simt[m_cluster_id] += mf->get_num_flits(false);
   }
+
+  // Custom add
+  // unsigned long long current_cycle = m_gpu->gpu_sim_cycle + m_gpu->gpu_tot_sim_cycle;
+  // if (m_response_fifo.size() > 1) {
+  //   fprintf(stdout, "zz:%u %zu \n", m_cluster_id, m_response_fifo.size());
+  // }
 }
 
 void simt_core_cluster::get_pdom_stack_top_info(unsigned sid, unsigned tid,

@@ -136,6 +136,17 @@ class mem_fetch {
   unsigned get_num_mshr_entries() { return m_mshr_entries; }
   void set_num_mshr_entries(unsigned value) { m_mshr_entries = value; }
 
+  // Custom add
+  bool is_in_l2() {
+    if(m_status) {
+          return (m_status == IN_PARTITION_ROP_DELAY || m_status == IN_PARTITION_ICNT_TO_L2_QUEUE || m_status == IN_PARTITION_DRAM_LATENCY_QUEUE ||
+    m_status == IN_PARTITION_L2_MISS_QUEUE || m_status == IN_PARTITION_MC_RETURNQ || m_status == IN_PARTITION_DRAM_TO_L2_QUEUE ||
+    m_status == IN_PARTITION_L2_FILL_QUEUE);
+    } else {
+      return false;
+    }
+  }
+  mem_access_t m_access;
  private:
   // Custom add MSHR information
   unsigned m_mshr_entries;
@@ -151,7 +162,6 @@ class mem_fetch {
   unsigned long long m_status_change;
 
   // request type, address, size, mask
-  mem_access_t m_access;
   unsigned m_data_size;  // how much data is being written
   unsigned
       m_ctrl_size;  // how big would all this meta data be in hardware (does not
@@ -183,6 +193,8 @@ class mem_fetch {
 
   const memory_config *m_mem_config;
   unsigned icnt_flit_size;
+
+
 
   mem_fetch
       *original_mf;  // this pointer is set up when a request is divided into

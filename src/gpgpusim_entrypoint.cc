@@ -109,8 +109,10 @@ void *gpgpu_sim_thread_concurrent(void *ctx_ptr) {
       // behaviour may be incorrect. Check that a kernel has finished and
       // no other kernel is currently running.
       if (ctx->the_gpgpusim->g_stream_manager->operation(&sim_cycles) &&
-          !ctx->the_gpgpusim->g_the_gpu->active())
+          !ctx->the_gpgpusim->g_the_gpu->active()) {
         break;
+
+        }
 
       // functional simulation
       if (ctx->the_gpgpusim->g_the_gpu->is_functional_sim()) {

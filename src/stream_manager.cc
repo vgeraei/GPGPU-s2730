@@ -273,19 +273,20 @@ bool stream_manager::register_finished_kernel(unsigned grid_uid) {
 
     // Jin: should check children kernels for CDP
     if (kernel->is_finished()) {
-      //            std::ofstream kernel_stat("kernel_stat.txt",
-      //            std::ofstream::out | std::ofstream::app); kernel_stat<< "
-      //            kernel " << grid_uid << ": " << kernel->name();
-      //            if(kernel->get_parent())
-      //                kernel_stat << ", parent " <<
-      //                kernel->get_parent()->get_uid() <<
-      //                ", launch " << kernel->launch_cycle;
-      //            kernel_stat<< ", start " << kernel->start_cycle <<
-      //                ", end " << kernel->end_cycle << ", retire " <<
-      //                gpu_sim_cycle + gpu_tot_sim_cycle << "\n";
-      //            printf("kernel %d finishes, retires from stream %d\n",
-      //            grid_uid, stream->get_uid()); kernel_stat.flush();
-      //            kernel_stat.close();
+      fprintf(stdout, "Kernel timing, start cycle: %llu  end cycle: %llu \n", kernel->start_cycle, kernel->end_cycle);
+    //              std::ofstream kernel_stat("kernel_stat.txt",
+    //              std::ofstream::out | std::ofstream::app); kernel_stat<< "
+    //              kernel " << grid_uid << ": " << kernel->name();
+    //              if(kernel->get_parent())
+    //                  kernel_stat << ", parent " <<
+    //                  kernel->get_parent()->get_uid() <<
+    //                  ", launch " << kernel->launch_cycle;
+    //              kernel_stat<< ", start " << kernel->start_cycle <<
+    //                  ", end " << kernel->end_cycle << ", retire " <<
+    //                  gpu_sim_cycle + gpu_tot_sim_cycle << "\n";
+    //              printf("kernel %d finishes, retires from stream %d\n",
+    //              grid_uid, stream->get_uid()); kernel_stat.flush();
+    //              kernel_stat.close();
       stream->record_next_done();
       m_grid_id_to_stream.erase(grid_uid);
       kernel->notify_parent_finished();

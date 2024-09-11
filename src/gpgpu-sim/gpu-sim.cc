@@ -1367,6 +1367,16 @@ void gpgpu_sim::gpu_print_stat() {
 
     printf("\n========= L2 cache stats =========\n");
     for (unsigned i = 0; i < m_memory_config->m_n_mem_sub_partition; i++) {
+      // Custom add 
+      cache_stats temp_l2_stats;
+      temp_l2_stats.clear();
+      m_memory_sub_partition[i]->accumulate_L2cache_stats(temp_l2_stats);
+      fprintf(stdout, "Total K1 misses: %llu \n", temp_l2_stats.get_L2_stats(1));
+      fprintf(stdout, "Total K2 misses: %llu \n", temp_l2_stats.get_L2_stats(2));
+
+    }
+
+    for (unsigned i = 0; i < m_memory_config->m_n_mem_sub_partition; i++) {
       m_memory_sub_partition[i]->accumulate_L2cache_stats(l2_stats);
       m_memory_sub_partition[i]->get_L2cache_sub_stats(l2_css);
 
@@ -1377,12 +1387,20 @@ void gpgpu_sim::gpu_print_stat() {
               (double)l2_css.misses / (double)l2_css.accesses,
               l2_css.pending_hits, l2_css.res_fails);
 
+      
       total_l2_css += l2_css;
+
+
     }
     if (!m_memory_config->m_L2_config.disabled() &&
         m_memory_config->m_L2_config.get_num_lines()) {
       // L2c_print_cache_stat();
+
       printf("L2_total_cache_accesses = %llu\n", total_l2_css.accesses);
+      // Custom add
+      printf("L2_total_K1_misses = %llu\n", total_l2_css.l2_misses_k1);
+      printf("L2_total_K2_misses = %llu\n", total_l2_css.l2_misses_k2);
+
       printf("L2_total_cache_misses = %llu\n", total_l2_css.misses);
       if (total_l2_css.accesses > 0)
         printf("L2_total_cache_miss_rate = %.4lf\n",

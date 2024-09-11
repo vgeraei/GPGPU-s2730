@@ -232,17 +232,58 @@ void tag_array::remove_pending_line(mem_fetch *mf) {
 
 enum cache_request_status tag_array::probe(new_addr_type addr, unsigned &idx,
                                            mem_fetch *mf,
-                                           bool probe_mode) const {
+                                           bool probe_mode, bool l2_partitioned) const {
   mem_access_sector_mask_t mask = mf->get_access_sector_mask();
-  return probe(addr, idx, mask, probe_mode, mf);
+  return probe(addr, idx, mask, probe_mode, mf, l2_partitioned);
 }
 
 enum cache_request_status tag_array::probe(new_addr_type addr, unsigned &idx,
                                            mem_access_sector_mask_t mask,
                                            bool probe_mode,
-                                           mem_fetch *mf) const {
+                                           mem_fetch *mf, bool l2_partitioned) const {
   // assert( m_config.m_write_policy == READ_ONLY );
-  unsigned set_index = m_config.set_index(addr);
+
+  // Custom add
+  // fprintf(stdout, "Cache name is: %s \n", m_config.m_config_string);
+  bool partitioning_cond = false;
+  if(mf) 
+    partitioning_cond = mf->is_in_l2();
+  
+
+
+  unsigned set_index;
+  // fprintf(stdout, "Cache name is: %s \n", cache_name);
+  // Custom add
+  unsigned num_sets = m_config.get_nset();
+  if(partitioning_cond) {
+    if(mf->get_sid() == 0)
+      set_index = m_config.set_index(addr) % (num_sets/2);
+    else if(mf->get_sid() == 1) {
+      set_index = (m_config.set_index(addr) % (num_sets/2)) + (num_sets/2);
+    } else {
+      set_index = m_config.set_index(addr);
+    }
+    
+    // if(mf->is_write()) {
+    //   fprintf(stdout, "YW-");
+    // } else {
+    //   fprintf(stdout, "ZN-");
+    // }
+
+    // fprintf(stdout, "Set index = %u\n", set_index);
+
+    // fprintf(stdout, "The cache set for request from kernel %u is: %u \n", mf->get_sid(), set_index);
+    // fprintf(stdout, "L2 cache line is: \n");
+    // for (unsigned i = 0; i < m_config.get_num_lines(); i++) {
+    //   fprintf(stdout, "Line %u: Addr %llu    Tag %llu \n", i, m_lines[i]->m_tag, m_lines[i]->m_block_addr);
+    // }
+
+  }
+  else {
+    set_index = m_config.set_index(addr);
+  }
+
+  
   new_addr_type tag = m_config.tag(addr);
 
   unsigned invalid_line = (unsigned)-1;
@@ -250,7 +291,7 @@ enum cache_request_status tag_array::probe(new_addr_type addr, unsigned &idx,
   unsigned long long valid_timestamp = (unsigned)-1;
 
   bool all_reserved = true;
-
+  bool is_mf_write = mf->is_write();
   // check for hit or pending hit
   for (unsigned way = 0; way < m_config.m_assoc; way++) {
     unsigned index = set_index * m_config.m_assoc + way;
@@ -258,20 +299,34 @@ enum cache_request_status tag_array::probe(new_addr_type addr, unsigned &idx,
     if (line->m_tag == tag) {
       if (line->get_status(mask) == RESERVED) {
         idx = index;
+        // if (partitioning_cond)
+        //   fprintf(stdout, "Hit reserved set %u way %u Tag %llu  \n", set_index, way, m_lines[index]->m_tag);
         return HIT_RESERVED;
       } else if (line->get_status(mask) == VALID) {
         idx = index;
+        // if (partitioning_cond)
+        //   fprintf(stdout, "Hit set %u way %u Tag %llu  \n", set_index, way, m_lines[index]->m_tag);
         return HIT;
       } else if (line->get_status(mask) == MODIFIED) {
         if (line->is_readable(mask)) {
           idx = index;
+          // if (partitioning_cond)
+            // fprintf(stdout, "Hit set %u way %u Tag %llu  \n", set_index, way, m_lines[index]->m_tag);
           return HIT;
         } else {
           idx = index;
+          // if (is_mf_write) {
+          //   fprintf(stdout, "WM-");
+          // }
+          // if (partitioning_cond)
+          //   fprintf(stdout, "Sector miss set %u way %u Tag %llu  \n", set_index, way, m_lines[index]->m_tag);
           return SECTOR_MISS;
         }
 
       } else if (line->is_valid_line() && line->get_status(mask) == INVALID) {
+        // if (is_mf_write) {
+        //     fprintf(stdout, "WM-");
+        //   }
         idx = index;
         return SECTOR_MISS;
       } else {
@@ -282,26 +337,35 @@ enum cache_request_status tag_array::probe(new_addr_type addr, unsigned &idx,
       all_reserved = false;
       if (line->is_invalid_line()) {
         invalid_line = index;
+        // if (partitioning_cond)
+        //     fprintf(stdout, "Invalid set %u way %u Tag %llu  \n", set_index, way, m_lines[index]->m_tag);
+          
       } else {
         // valid line : keep track of most appropriate replacement candidate
         if (m_config.m_replacement_policy == LRU) {
           if (line->get_last_access_time() < valid_timestamp) {
             valid_timestamp = line->get_last_access_time();
             valid_line = index;
+            // if (partitioning_cond)
+              // fprintf(stdout, "Valid LRU set %u way %u Tag %llu  \n", set_index, way, m_lines[index]->m_tag);
           }
         } else if (m_config.m_replacement_policy == FIFO) {
           if (line->get_alloc_time() < valid_timestamp) {
             valid_timestamp = line->get_alloc_time();
             valid_line = index;
+            // if (partitioning_cond)
+              // fprintf(stdout, "Valid FIFO set %u way %u Tag %llu  \n", set_index, way, m_lines[index]->m_tag);
           }
         }
       }
     }
   }
+
   if (all_reserved) {
     assert(m_config.m_alloc_policy == ON_MISS);
+    
     return RESERVATION_FAIL;  // miss and not enough space in cache to allocate
-                              // on miss
+                              // on miss               
   }
 
   if (invalid_line != (unsigned)-1) {
@@ -317,10 +381,15 @@ enum cache_request_status tag_array::probe(new_addr_type addr, unsigned &idx,
         pending_lines.find(m_config.block_addr(addr));
     assert(mf);
     if (!mf->is_write() && i != pending_lines.end()) {
-      if (i->second != mf->get_inst().get_uid()) return SECTOR_MISS;
+      if (i->second != mf->get_inst().get_uid()) {
+        // if (is_mf_write) {
+        //     fprintf(stdout, "WM-");
+        //   }
+        return SECTOR_MISS;
+      }
     }
   }
-
+   
   return MISS;
 }
 
@@ -340,7 +409,7 @@ enum cache_request_status tag_array::access(new_addr_type addr, unsigned time,
   m_access++;
   is_used = true;
   shader_cache_access_log(m_core_id, m_type_id, 0);  // log accesses to cache
-  enum cache_request_status status = probe(addr, idx, mf);
+  enum cache_request_status status = probe(addr, idx, mf, false);
   switch (status) {
     case HIT_RESERVED:
       m_pending_hit++;
@@ -653,6 +722,17 @@ void cache_stats::inc_stats_pw(int access_type, int access_outcome) {
   m_stats_pw[access_type][access_outcome]++;
 }
 
+
+// Custom add
+unsigned long long cache_stats::get_L2_stats(int kernel_num) {
+  if (kernel_num == 1) {
+    return l2_misses_k1;
+  } else if (kernel_num == 2) {
+    return l2_misses_k2;
+  }
+}
+
+
 // Custom add
 void cache_stats::inc_L1_mem_req_pw() {
   L1_custom_stats_pw.increment_mem_req();
@@ -740,6 +820,12 @@ cache_stats cache_stats::operator+(const cache_stats &cs) {
       m_cache_data_port_busy_cycles + cs.m_cache_data_port_busy_cycles;
   ret.m_cache_fill_port_busy_cycles =
       m_cache_fill_port_busy_cycles + cs.m_cache_fill_port_busy_cycles;
+
+
+  // Custom add
+  ret.l2_misses_k1 = l2_misses_k1 + cs.l2_misses_k1;
+  ret.l2_misses_k2 = l2_misses_k2 + cs.l2_misses_k2;
+
   return ret;
 }
 
@@ -762,6 +848,12 @@ cache_stats &cache_stats::operator+=(const cache_stats &cs) {
   m_cache_port_available_cycles += cs.m_cache_port_available_cycles;
   m_cache_data_port_busy_cycles += cs.m_cache_data_port_busy_cycles;
   m_cache_fill_port_busy_cycles += cs.m_cache_fill_port_busy_cycles;
+
+
+  // Custom add
+  l2_misses_k1 += cs.l2_misses_k1;
+  l2_misses_k2 += cs.l2_misses_k2;
+
   return *this;
 }
 
@@ -868,6 +960,11 @@ void cache_stats::get_sub_stats(struct cache_sub_stats &css) const {
   t_css.port_available_cycles = m_cache_port_available_cycles;
   t_css.data_port_busy_cycles = m_cache_data_port_busy_cycles;
   t_css.fill_port_busy_cycles = m_cache_fill_port_busy_cycles;
+
+
+  // Custom add
+  t_css.l2_misses_k1 = l2_misses_k1;
+  t_css.l2_misses_k2 = l2_misses_k2;
 
   css = t_css;
 }
@@ -1660,7 +1757,7 @@ enum cache_request_status read_only_cache::access(
   new_addr_type block_addr = m_config.block_addr(addr);
   unsigned cache_index = (unsigned)-1;
   enum cache_request_status status =
-      m_tag_array->probe(block_addr, cache_index, mf);
+      m_tag_array->probe(block_addr, cache_index, mf, false);
   enum cache_request_status cache_status = RESERVATION_FAIL;
 
   if (status == HIT) {
@@ -1682,6 +1779,7 @@ enum cache_request_status read_only_cache::access(
   } else {
     m_stats.inc_fail_stats(mf->get_access_type(), LINE_ALLOC_FAIL);
   }
+
 
   m_stats.inc_stats(mf->get_access_type(),
                     m_stats.select_stats_status(status, cache_status));
@@ -1746,6 +1844,11 @@ enum cache_request_status data_cache::access(new_addr_type addr, mem_fetch *mf,
   bool wr = mf->get_is_write();
   new_addr_type block_addr = m_config.block_addr(addr);
   unsigned cache_index = (unsigned)-1;
+
+  // Custom add L2D condition 
+  // std::string name_L2D = "L2";
+  // bool L2D_condition =  (m_name[0] == name_L2D[0] && m_name[1] == name_L2D[1]);
+
   enum cache_request_status probe_status =
       m_tag_array->probe(block_addr, cache_index, mf, true);
   enum cache_request_status access_status =
@@ -1754,6 +1857,20 @@ enum cache_request_status data_cache::access(new_addr_type addr, mem_fetch *mf,
                     m_stats.select_stats_status(probe_status, access_status));
   m_stats.inc_stats_pw(mf->get_access_type(), m_stats.select_stats_status(
                                                   probe_status, access_status));
+
+
+  // Custom add: misses come from which kernel
+  if (access_status == MISS || access_status == SECTOR_MISS && mf->get_access_type() == L2_WR_ALLOC_R ||
+  mf->get_access_type() == L2_WRBK_ACC) {
+    if(mf->get_sid() == 0)
+      data_cache::m_stats.inc_L2_stats(1);
+    else if(mf->get_sid() == 1) {
+      data_cache::m_stats.inc_L2_stats(2);
+    }
+  }
+      
+
+
   return access_status;
 }
 
@@ -1773,6 +1890,9 @@ enum cache_request_status l1_cache::access(new_addr_type addr, mem_fetch *mf,
 enum cache_request_status l2_cache::access(new_addr_type addr, mem_fetch *mf,
                                            unsigned time,
                                            std::list<cache_event> &events) {
+
+
+
   return data_cache::access(addr, mf, time, events);
 }
 

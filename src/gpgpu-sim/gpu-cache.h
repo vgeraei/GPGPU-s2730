@@ -818,11 +818,11 @@ class tag_array {
   ~tag_array();
 
   enum cache_request_status probe(new_addr_type addr, unsigned &idx,
-                                  mem_fetch *mf, bool probe_mode = false) const;
+                                  mem_fetch *mf, bool probe_mode = false, bool l2_partitioned = false) const;
   enum cache_request_status probe(new_addr_type addr, unsigned &idx,
                                   mem_access_sector_mask_t mask,
                                   bool probe_mode = false,
-                                  mem_fetch *mf = NULL) const;
+                                  mem_fetch *mf = NULL, bool l2_partitioned = false) const;
   enum cache_request_status access(new_addr_type addr, unsigned time,
                                    unsigned &idx, mem_fetch *mf);
   enum cache_request_status access(new_addr_type addr, unsigned time,
@@ -850,6 +850,7 @@ class tag_array {
   void add_pending_line(mem_fetch *mf);
   void remove_pending_line(mem_fetch *mf);
 
+
  protected:
   // This constructor is intended for use only from derived classes that wish to
   // avoid unnecessary memory allocation that takes place in the
@@ -859,6 +860,7 @@ class tag_array {
   void init(int core_id, int type_id);
 
  protected:
+
   cache_config &m_config;
 
   cache_block_t **m_lines; /* nbanks x nset x assoc lines in total */
@@ -961,6 +963,12 @@ struct cache_sub_stats {
   unsigned long long data_port_busy_cycles;
   unsigned long long fill_port_busy_cycles;
 
+
+  // Custom add 
+  unsigned long long l2_misses_k1;
+  unsigned long long l2_misses_k2;
+
+
   cache_sub_stats() { clear(); }
   void clear() {
     accesses = 0;
@@ -970,6 +978,10 @@ struct cache_sub_stats {
     port_available_cycles = 0;
     data_port_busy_cycles = 0;
     fill_port_busy_cycles = 0;
+
+    // Custom add 
+    l2_misses_k1 = 0;
+    l2_misses_k2 = 0;
   }
   cache_sub_stats &operator+=(const cache_sub_stats &css) {
     ///
@@ -982,6 +994,11 @@ struct cache_sub_stats {
     port_available_cycles += css.port_available_cycles;
     data_port_busy_cycles += css.data_port_busy_cycles;
     fill_port_busy_cycles += css.fill_port_busy_cycles;
+
+    // Custom add 
+    l2_misses_k1 += css.l2_misses_k1;
+    l2_misses_k2 += css.l2_misses_k2;
+
     return *this;
   }
 
@@ -1000,6 +1017,13 @@ struct cache_sub_stats {
         data_port_busy_cycles + cs.data_port_busy_cycles;
     ret.fill_port_busy_cycles =
         fill_port_busy_cycles + cs.fill_port_busy_cycles;
+
+
+    // Custom add 
+    ret.l2_misses_k1 = l2_misses_k1 + cs.l2_misses_k1;
+    ret.l2_misses_k2 = l2_misses_k2 + cs.l2_misses_k2;
+
+    
     return ret;
   }
 
@@ -1145,6 +1169,7 @@ class cache_stats {
   void inc_L1_mem_req_pw();
   void clear_L1_stats() ;
   void inc_L2_stats(int kernel_num);
+  unsigned long long get_L2_stats(int kernel_num);
 
   enum cache_request_status select_stats_status(
       enum cache_request_status probe, enum cache_request_status access) const;

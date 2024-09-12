@@ -246,8 +246,8 @@ enum cache_request_status tag_array::probe(new_addr_type addr, unsigned &idx,
   // Custom add
   // fprintf(stdout, "Cache name is: %s \n", m_config.m_config_string);
   bool partitioning_cond = false;
-  if(mf) 
-    partitioning_cond = mf->is_in_l2();
+  // if(mf) 
+    // partitioning_cond = mf->is_in_l2();
   
 
 
@@ -310,23 +310,14 @@ enum cache_request_status tag_array::probe(new_addr_type addr, unsigned &idx,
       } else if (line->get_status(mask) == MODIFIED) {
         if (line->is_readable(mask)) {
           idx = index;
-          // if (partitioning_cond)
-            // fprintf(stdout, "Hit set %u way %u Tag %llu  \n", set_index, way, m_lines[index]->m_tag);
+  
           return HIT;
         } else {
           idx = index;
-          // if (is_mf_write) {
-          //   fprintf(stdout, "WM-");
-          // }
-          // if (partitioning_cond)
-          //   fprintf(stdout, "Sector miss set %u way %u Tag %llu  \n", set_index, way, m_lines[index]->m_tag);
-          return SECTOR_MISS;
+           return SECTOR_MISS;
         }
 
       } else if (line->is_valid_line() && line->get_status(mask) == INVALID) {
-        // if (is_mf_write) {
-        //     fprintf(stdout, "WM-");
-        //   }
         idx = index;
         return SECTOR_MISS;
       } else {
@@ -337,24 +328,19 @@ enum cache_request_status tag_array::probe(new_addr_type addr, unsigned &idx,
       all_reserved = false;
       if (line->is_invalid_line()) {
         invalid_line = index;
-        // if (partitioning_cond)
-        //     fprintf(stdout, "Invalid set %u way %u Tag %llu  \n", set_index, way, m_lines[index]->m_tag);
-          
       } else {
         // valid line : keep track of most appropriate replacement candidate
         if (m_config.m_replacement_policy == LRU) {
           if (line->get_last_access_time() < valid_timestamp) {
             valid_timestamp = line->get_last_access_time();
             valid_line = index;
-            // if (partitioning_cond)
-              // fprintf(stdout, "Valid LRU set %u way %u Tag %llu  \n", set_index, way, m_lines[index]->m_tag);
+           
           }
         } else if (m_config.m_replacement_policy == FIFO) {
           if (line->get_alloc_time() < valid_timestamp) {
             valid_timestamp = line->get_alloc_time();
             valid_line = index;
-            // if (partitioning_cond)
-              // fprintf(stdout, "Valid FIFO set %u way %u Tag %llu  \n", set_index, way, m_lines[index]->m_tag);
+            
           }
         }
       }
@@ -382,9 +368,6 @@ enum cache_request_status tag_array::probe(new_addr_type addr, unsigned &idx,
     assert(mf);
     if (!mf->is_write() && i != pending_lines.end()) {
       if (i->second != mf->get_inst().get_uid()) {
-        // if (is_mf_write) {
-        //     fprintf(stdout, "WM-");
-        //   }
         return SECTOR_MISS;
       }
     }
@@ -677,6 +660,12 @@ cache_stats::cache_stats() {
   // Custom add (contention tracking L2)
   l2_misses_k1 = 0;
   l2_misses_k2 = 0;
+
+  l2_misses_k1_w = 0;
+  l2_misses_k1_r = 0;
+
+  l2_misses_k2_w = 0;
+  l2_misses_k2_r = 0;
 }
 
 void cache_stats::clear() {
@@ -729,6 +718,25 @@ unsigned long long cache_stats::get_L2_stats(int kernel_num) {
     return l2_misses_k1;
   } else if (kernel_num == 2) {
     return l2_misses_k2;
+  }
+}
+
+
+// Custom add : getting read in misses
+unsigned long long cache_stats::get_L2_stats_r(int kernel_num) {
+  if (kernel_num == 1) {
+    return l2_misses_k1_r;
+  } else if (kernel_num == 2) {
+    return l2_misses_k2_r;
+  }
+}
+
+// Custom add : getting writes in misses
+unsigned long long cache_stats::get_L2_stats_w(int kernel_num) {
+  if (kernel_num == 1) {
+    return l2_misses_k1_w;
+  } else if (kernel_num == 2) {
+    return l2_misses_k2_w;
   }
 }
 
@@ -826,6 +834,12 @@ cache_stats cache_stats::operator+(const cache_stats &cs) {
   ret.l2_misses_k1 = l2_misses_k1 + cs.l2_misses_k1;
   ret.l2_misses_k2 = l2_misses_k2 + cs.l2_misses_k2;
 
+  ret.l2_misses_k1_r = l2_misses_k1_r + cs.l2_misses_k1_r;
+  ret.l2_misses_k2_r = l2_misses_k2_r + cs.l2_misses_k2_r;
+
+  ret.l2_misses_k1_w = l2_misses_k1_w + cs.l2_misses_k1_w;
+  ret.l2_misses_k2_w = l2_misses_k2_w + cs.l2_misses_k2_w;
+
   return ret;
 }
 
@@ -853,6 +867,12 @@ cache_stats &cache_stats::operator+=(const cache_stats &cs) {
   // Custom add
   l2_misses_k1 += cs.l2_misses_k1;
   l2_misses_k2 += cs.l2_misses_k2;
+
+  l2_misses_k1_r += cs.l2_misses_k1_r;
+  l2_misses_k2_r += cs.l2_misses_k2_r;
+
+  l2_misses_k1_w += cs.l2_misses_k1_w;
+  l2_misses_k2_w += cs.l2_misses_k2_w;
 
   return *this;
 }
@@ -966,6 +986,12 @@ void cache_stats::get_sub_stats(struct cache_sub_stats &css) const {
   t_css.l2_misses_k1 = l2_misses_k1;
   t_css.l2_misses_k2 = l2_misses_k2;
 
+  t_css.l2_misses_k1_r = l2_misses_k1_r;
+  t_css.l2_misses_k2_r = l2_misses_k2_r;
+
+  t_css.l2_misses_k1_w = l2_misses_k1_w;
+  t_css.l2_misses_k2_w = l2_misses_k2_w;
+
   css = t_css;
 }
 
@@ -1047,6 +1073,25 @@ void cache_stats::inc_L2_stats(int kernel_number) {
     l2_misses_k2++;
   }
 }
+
+void cache_stats::inc_L2_stats_r(int kernel_number) {
+  if(kernel_number == 1) {
+    l2_misses_k1_r++;
+  } else if (kernel_number == 2) {
+    l2_misses_k2_r++;
+  }
+}
+
+void cache_stats::inc_L2_stats_w(int kernel_number) {
+  if(kernel_number == 1) {
+    l2_misses_k1_w++;
+  } else if (kernel_number == 2) {
+    l2_misses_k2_w++;
+  }
+}
+
+
+
 
 bool cache_stats::check_valid(int type, int status) const {
   ///
@@ -1862,11 +1907,24 @@ enum cache_request_status data_cache::access(new_addr_type addr, mem_fetch *mf,
   // Custom add: misses come from which kernel
   if (access_status == MISS || access_status == SECTOR_MISS && mf->get_access_type() == L2_WR_ALLOC_R ||
   mf->get_access_type() == L2_WRBK_ACC) {
-    if(mf->get_sid() == 0)
+    if(mf->get_sid() == 0) {
       data_cache::m_stats.inc_L2_stats(1);
+      if (mf->is_write()) {
+        data_cache::m_stats.inc_L2_stats_w(1);
+      } else {
+        data_cache::m_stats.inc_L2_stats_r(1);
+      }
+    }
     else if(mf->get_sid() == 1) {
       data_cache::m_stats.inc_L2_stats(2);
+      if (mf->is_write()) {
+        data_cache::m_stats.inc_L2_stats_w(2);
+      } else {
+        data_cache::m_stats.inc_L2_stats_r(2);
+      }
     }
+
+    
   }
       
 

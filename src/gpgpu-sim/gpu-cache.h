@@ -969,6 +969,14 @@ struct cache_sub_stats {
   unsigned long long l2_misses_k2;
 
 
+  unsigned long long l2_misses_k1_r;
+  unsigned long long l2_misses_k2_r;
+
+
+  unsigned long long l2_misses_k1_w;
+  unsigned long long l2_misses_k2_w;
+
+
   cache_sub_stats() { clear(); }
   void clear() {
     accesses = 0;
@@ -982,6 +990,13 @@ struct cache_sub_stats {
     // Custom add 
     l2_misses_k1 = 0;
     l2_misses_k2 = 0;
+
+    l2_misses_k1_r = 0;
+    l2_misses_k2_r = 0;
+
+
+    l2_misses_k1_w = 0;
+    l2_misses_k2_w = 0;
   }
   cache_sub_stats &operator+=(const cache_sub_stats &css) {
     ///
@@ -998,6 +1013,12 @@ struct cache_sub_stats {
     // Custom add 
     l2_misses_k1 += css.l2_misses_k1;
     l2_misses_k2 += css.l2_misses_k2;
+     
+    l2_misses_k1_r += css.l2_misses_k1_r;
+    l2_misses_k2_r += css.l2_misses_k2_r;
+     
+    l2_misses_k1_w += css.l2_misses_k1_w;
+    l2_misses_k2_w += css.l2_misses_k2_w;
 
     return *this;
   }
@@ -1022,6 +1043,14 @@ struct cache_sub_stats {
     // Custom add 
     ret.l2_misses_k1 = l2_misses_k1 + cs.l2_misses_k1;
     ret.l2_misses_k2 = l2_misses_k2 + cs.l2_misses_k2;
+
+
+    ret.l2_misses_k1_r = l2_misses_k1_r + cs.l2_misses_k1_r;
+    ret.l2_misses_k2_r = l2_misses_k2_r + cs.l2_misses_k2_r;
+
+
+    ret.l2_misses_k1_w = l2_misses_k1_w + cs.l2_misses_k1_w;
+    ret.l2_misses_k2_w = l2_misses_k2_w + cs.l2_misses_k2_w;
 
     
     return ret;
@@ -1169,7 +1198,11 @@ class cache_stats {
   void inc_L1_mem_req_pw();
   void clear_L1_stats() ;
   void inc_L2_stats(int kernel_num);
+  void inc_L2_stats_w(int kernel_num);
+  void inc_L2_stats_r(int kernel_num);
   unsigned long long get_L2_stats(int kernel_num);
+  unsigned long long get_L2_stats_r(int kernel_num);
+  unsigned long long get_L2_stats_w(int kernel_num);
 
   enum cache_request_status select_stats_status(
       enum cache_request_status probe, enum cache_request_status access) const;
@@ -1216,6 +1249,14 @@ class cache_stats {
   // Custom add (contention tracking)
   unsigned long long l2_misses_k1;
   unsigned long long l2_misses_k2;
+
+
+  unsigned long long l2_misses_k1_r;
+  unsigned long long l2_misses_k2_r;
+
+
+  unsigned long long l2_misses_k1_w;
+  unsigned long long l2_misses_k2_w;
 };
 
 class cache_t {

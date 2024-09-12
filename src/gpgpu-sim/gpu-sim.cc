@@ -1401,6 +1401,13 @@ void gpgpu_sim::gpu_print_stat() {
       printf("L2_total_K1_misses = %llu\n", total_l2_css.l2_misses_k1);
       printf("L2_total_K2_misses = %llu\n", total_l2_css.l2_misses_k2);
 
+      printf("L2_total_K1_misses_r = %llu\n", total_l2_css.l2_misses_k1_r);
+      printf("L2_total_K2_misses_r = %llu\n", total_l2_css.l2_misses_k2_r);
+
+      printf("L2_total_K1_misses_w = %llu\n", total_l2_css.l2_misses_k1_w);
+      printf("L2_total_K2_misses_w = %llu\n", total_l2_css.l2_misses_k2_w);
+
+
       printf("L2_total_cache_misses = %llu\n", total_l2_css.misses);
       if (total_l2_css.accesses > 0)
         printf("L2_total_cache_miss_rate = %.4lf\n",

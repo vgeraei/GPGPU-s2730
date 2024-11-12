@@ -1905,8 +1905,7 @@ enum cache_request_status data_cache::access(new_addr_type addr, mem_fetch *mf,
 
 
   // Custom add: misses come from which kernel
-  if (access_status == MISS || access_status == SECTOR_MISS && mf->get_access_type() == L2_WR_ALLOC_R ||
-  mf->get_access_type() == L2_WRBK_ACC) {
+  if ((access_status == MISS || access_status == SECTOR_MISS)) {
     if(mf->get_sid() == 0) {
       data_cache::m_stats.inc_L2_stats(1);
       if (mf->is_write()) {

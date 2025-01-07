@@ -247,7 +247,7 @@ enum cache_request_status tag_array::probe(new_addr_type addr, unsigned &idx,
   // fprintf(stdout, "Cache name is: %s \n", m_config.m_config_string);
   bool partitioning_cond = false;
   // if(mf) 
-    // partitioning_cond = mf->is_in_l2();
+  //   partitioning_cond = mf->is_in_l2();
   
 
 
@@ -258,11 +258,12 @@ enum cache_request_status tag_array::probe(new_addr_type addr, unsigned &idx,
   if(partitioning_cond) {
     if(mf->get_sid() == 0)
       set_index = m_config.set_index(addr) % (num_sets/2);
-    else if(mf->get_sid() == 1) {
+    else {
       set_index = (m_config.set_index(addr) % (num_sets/2)) + (num_sets/2);
-    } else {
-      set_index = m_config.set_index(addr);
-    }
+    } 
+    // else {
+    //   set_index = m_config.set_index(addr);
+    // }
     
     // if(mf->is_write()) {
     //   fprintf(stdout, "YW-");

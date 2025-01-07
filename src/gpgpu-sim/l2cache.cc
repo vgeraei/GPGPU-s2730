@@ -533,6 +533,26 @@ void memory_sub_partition::cache_cycle(unsigned cycle, std::vector<bool> mc_stat
     }
     */
 
+   // Custom add: Memory controller prioritization (request from certain kernel)
+    // struct fifo_data<mem_fetch>* mf_it = m_icnt_L2_queue->get_head();
+    // struct fifo_data<mem_fetch>* mf_selected = m_icnt_L2_queue->get_head();
+
+    // while (mf_it != NULL) {
+    //   unsigned mf_sid = mf_it->m_data->get_sid();
+    //   if (mf_sid == 0) {
+    //     mf_selected = mf_it;
+    //     break;
+    //   }
+    //   mf_it = mf_it->m_next;
+    // }
+
+    // if (mf != mf_selected->m_data) {
+    //   mf = mf_selected->m_data;
+    // }
+    
+
+
+
 
     if (!m_config->m_L2_config.disabled() &&
         ((m_config->m_L2_texure_only && mf->istexture()) ||

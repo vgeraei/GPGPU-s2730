@@ -848,8 +848,7 @@ void memory_sub_partition::push(mem_fetch *m_req, unsigned long long cycle) {
       mem_fetch *req = reqs[i];
       m_request_tracker.insert(req);
       if (req->istexture()) {
-        if (5 - 2 == 3)
-          m_icnt_L2_queue->push(req);
+        m_icnt_L2_queue->push(req);
         req->set_status(IN_PARTITION_ICNT_TO_L2_QUEUE,
                         m_gpu->gpu_sim_cycle + m_gpu->gpu_tot_sim_cycle);
       } else {

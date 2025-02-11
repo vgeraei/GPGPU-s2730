@@ -224,7 +224,64 @@ void* InterconnectInterface::Pop(unsigned deviceID)
   }
 
   return data;
+}
 
+
+// void* InterconnectInterface::PriorityPop(unsigned deviceID)
+// {
+//   int icntID = _node_map[deviceID];
+// #if DEBUG
+//   cout<<"Call interconnect POP  " << output<<endl;
+// #endif
+
+//   void* data = NULL;
+
+//   // 0-_n_shader-1 indicates reply(network 1), otherwise request(network 0)
+//   int subnet = 0;
+//   if (deviceID < _n_shader)
+//     subnet = 1;
+
+//   int turn = _round_robin_turn[subnet][icntID];
+//   for (int vc=0;(vc<_vcs) && (data==NULL);vc++) {
+//     if (_boundary_buffer[subnet][icntID][turn].HasPacket()) {
+//       data = _boundary_buffer[subnet][icntID][turn].PriorityPopPacket();
+//     }
+//     turn++;
+//     if (turn == _vcs) turn = 0;
+//   }
+//   if (data) {
+//     _round_robin_turn[subnet][icntID] = turn;
+//   }
+
+//   return data;
+// }
+
+void* InterconnectInterface::Top(unsigned deviceID)
+{
+  
+  int icntID = _node_map[deviceID];
+#if DEBUG
+  cout << "Call interconnect TOP" << endl;
+#endif
+
+  void* data = NULL;
+
+  // 0-_n_shader-1 indicates reply(network 1), otherwise request(network 0)
+  int subnet = 0;
+  if (deviceID < _n_shader)
+    subnet = 1;
+
+  int turn = _round_robin_turn[subnet][icntID];
+  for (int vc = 0; (vc < _vcs) && (data == NULL); vc++) {
+    if (_boundary_buffer[subnet][icntID][turn].HasPacket()) {
+      data = _boundary_buffer[subnet][icntID][turn].TopPacket(); 
+    }
+    turn++;
+    if (turn == _vcs) turn = 0;
+  }
+
+  // Do not update _round_robin_turn, as no packet was removed
+  return data;
 }
 
 void InterconnectInterface::Advance()
@@ -270,6 +327,28 @@ bool InterconnectInterface::HasBuffer(unsigned deviceID, unsigned int size) cons
 
   return has_buffer;
 }
+
+unsigned InterconnectInterface::BufferSize(unsigned ouput_deviceID) 
+{
+  int icntID = _node_map[ouput_deviceID];
+
+  unsigned buffer_size = 0;
+
+  // 0-_n_shader-1 indicates reply(network 1), otherwise request(network 0)
+  int subnet = 0;
+  if (ouput_deviceID < _n_shader)
+    subnet = 1;
+
+  int turn = _round_robin_turn[subnet][icntID];
+  for (int vc=0;(vc<_vcs) && (buffer_size==NULL);vc++) {
+    if (_boundary_buffer[subnet][icntID][turn].HasPacket()) {
+      buffer_size = _boundary_buffer[subnet][icntID][turn].Size();
+    }
+  }
+
+  return buffer_size;
+}
+
 
 void InterconnectInterface::DisplayStats() const
 {
@@ -526,6 +605,23 @@ void* InterconnectInterface::_BoundaryBufferItem::PopPacket()
   }
   return data;
 }
+
+// void* InterconnectInterface::_BoundaryBufferItem::PriorityPopPacket()
+// {
+//  assert (_packet_n);
+//   void * data = NULL;
+//   void * flit_data = _buffer.front();
+//   while (data == NULL) {
+//     assert(flit_data == _buffer.front()); //all flits must belong to the same packet
+//     if (_tail_flag.front()) {
+//       data = _buffer.front();
+//       _packet_n--;
+//     }
+//     _buffer.pop();
+//     _tail_flag.pop();
+//   }
+//   return data;
+// }
 
 void* InterconnectInterface::_BoundaryBufferItem::TopPacket() const
 {

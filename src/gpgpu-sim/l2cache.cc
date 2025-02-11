@@ -429,6 +429,10 @@ memory_sub_partition::memory_sub_partition(unsigned sub_partition_id,
   unsigned int L2_icnt;
   sscanf(m_config->gpgpu_L2_queue_config, "%u:%u:%u:%u", &icnt_L2, &L2_dram,
          &dram_L2, &L2_icnt);
+
+  // Custom add
+  m_icnt_L2_queue_kua = new fifo_pipeline<mem_fetch>("icnt-to-L2-kua", 0, icnt_L2);
+
   m_icnt_L2_queue = new fifo_pipeline<mem_fetch>("icnt-to-L2", 0, icnt_L2);
   m_L2_dram_queue = new fifo_pipeline<mem_fetch>("L2-to-dram", 0, L2_dram);
   m_dram_L2_queue = new fifo_pipeline<mem_fetch>("dram-to-L2", 0, dram_L2);
@@ -437,6 +441,8 @@ memory_sub_partition::memory_sub_partition(unsigned sub_partition_id,
 }
 
 memory_sub_partition::~memory_sub_partition() {
+  // Custom add
+  delete m_icnt_L2_queue_kua;
   delete m_icnt_L2_queue;
   delete m_L2_dram_queue;
   delete m_dram_L2_queue;
@@ -497,8 +503,17 @@ void memory_sub_partition::cache_cycle(unsigned cycle, std::vector<bool> mc_stat
   if (!m_config->m_L2_config.disabled()) m_L2cache->cycle(mc_states);
 
   // new L2 texture accesses and/or non-texture accesses
-  if (!m_L2_dram_queue->full() && !m_icnt_L2_queue->empty()) {
-    mem_fetch *mf = m_icnt_L2_queue->top();
+  if (!m_L2_dram_queue->full() && (!m_icnt_L2_queue->empty() || !m_icnt_L2_queue_kua->empty())) {
+    // custom add
+    mem_fetch *mf;
+    bool is_kua_queue_emptied = false;
+    if (cycle % 2) {
+        mf = !m_icnt_L2_queue_kua->empty() ? m_icnt_L2_queue_kua->top() : m_icnt_L2_queue->top();
+        is_kua_queue_emptied = !m_icnt_L2_queue_kua->empty();
+    } else {
+        mf = !m_icnt_L2_queue->empty() ? m_icnt_L2_queue->top() : m_icnt_L2_queue_kua->top();
+        is_kua_queue_emptied = m_icnt_L2_queue->empty();
+    }
 
     // Custom add: Memory controller prioritization
     /*
@@ -587,7 +602,10 @@ void memory_sub_partition::cache_cycle(unsigned cycle, std::vector<bool> mc_stat
             }
 
             // Custom add: deleting a specific mf
-            m_icnt_L2_queue->pop();
+            if (is_kua_queue_emptied)
+              m_icnt_L2_queue_kua->pop();
+            else
+              m_icnt_L2_queue->pop();
             // m_icnt_L2_queue->pop_element(mf);
 
             
@@ -597,10 +615,14 @@ void memory_sub_partition::cache_cycle(unsigned cycle, std::vector<bool> mc_stat
 
           } else {
             assert(write_sent);
-
+            // Custom add
+            if (is_kua_queue_emptied)
+              m_icnt_L2_queue_kua->pop();
+            else
+              m_icnt_L2_queue->pop();
             // Custom add: deleting a specific mf
             // m_icnt_L2_queue->pop_element(mf);
-            m_icnt_L2_queue->pop();
+            // m_icnt_L2_queue->pop();
           }
         } else if (status != RESERVATION_FAIL) {
           if (mf->is_write() &&
@@ -616,7 +638,11 @@ void memory_sub_partition::cache_cycle(unsigned cycle, std::vector<bool> mc_stat
           // L2 cache accepted request
           // Custom add: deleting a specific mf
           // m_icnt_L2_queue->pop_element(mf);
-          m_icnt_L2_queue->pop();
+          if (is_kua_queue_emptied)
+              m_icnt_L2_queue_kua->pop();
+          else
+              m_icnt_L2_queue->pop();
+          // m_icnt_L2_queue->pop();
         } else {
           assert(!write_sent);
           assert(!read_sent);
@@ -631,26 +657,38 @@ void memory_sub_partition::cache_cycle(unsigned cycle, std::vector<bool> mc_stat
       m_L2_dram_queue->push(mf);
 
       // Custom add: deleting a specific mf
-      m_icnt_L2_queue->pop();
+      if (is_kua_queue_emptied)
+          m_icnt_L2_queue_kua->pop();
+      else
+           m_icnt_L2_queue->pop();
+      // m_icnt_L2_queue->pop();
       // m_icnt_L2_queue->pop_element(mf);
     }
   }
 
   // ROP delay queue
-  if (!m_rop.empty() && (cycle >= m_rop.front().ready_cycle) &&
-      !m_icnt_L2_queue->full()) {
-    mem_fetch *mf = m_rop.front().req;
-    m_rop.pop();
-    m_icnt_L2_queue->push(mf);
-    mf->set_status(IN_PARTITION_ICNT_TO_L2_QUEUE,
-                   m_gpu->gpu_sim_cycle + m_gpu->gpu_tot_sim_cycle);
+  if (!m_rop.empty() && (cycle >= m_rop.front().ready_cycle)) {
+    if ((!m_icnt_L2_queue->full() && m_rop.front().req->get_sid() != 0) || (!m_icnt_L2_queue_kua->full() && m_rop.front().req->get_sid() == 0)) {
+      mem_fetch *mf = m_rop.front().req;
+      m_rop.pop();
+      // Custom add: chosing which icnt_L2_queue to assign mf to
+      if (mf->get_sid() != 0)
+        m_icnt_L2_queue->push(mf);
+      else
+        m_icnt_L2_queue_kua->push(mf);
+      mf->set_status(IN_PARTITION_ICNT_TO_L2_QUEUE,
+                    m_gpu->gpu_sim_cycle + m_gpu->gpu_tot_sim_cycle);    
+    }
   }
 }
 
-bool memory_sub_partition::full() const { return m_icnt_L2_queue->full(); }
+bool memory_sub_partition::full() const { return m_icnt_L2_queue->full() && m_icnt_L2_queue_kua->full(); }
 
-bool memory_sub_partition::full(unsigned size) const {
-  return m_icnt_L2_queue->is_avilable_size(size);
+bool memory_sub_partition::full(unsigned size, unsigned sid) const {
+  if (sid == 777)
+    return m_icnt_L2_queue_kua->is_avilable_size(size) && m_icnt_L2_queue->is_avilable_size(size);
+  else
+    return (sid == 0 && m_icnt_L2_queue_kua->is_avilable_size(size)) || (sid != 0 && m_icnt_L2_queue->is_avilable_size(size));
 }
 
 bool memory_sub_partition::L2_dram_queue_empty() const {
@@ -848,7 +886,10 @@ void memory_sub_partition::push(mem_fetch *m_req, unsigned long long cycle) {
       mem_fetch *req = reqs[i];
       m_request_tracker.insert(req);
       if (req->istexture()) {
-        m_icnt_L2_queue->push(req);
+        if (req->get_sid() == 0)
+          m_icnt_L2_queue_kua->push(req);
+        else
+          m_icnt_L2_queue->push(req);
         req->set_status(IN_PARTITION_ICNT_TO_L2_QUEUE,
                         m_gpu->gpu_sim_cycle + m_gpu->gpu_tot_sim_cycle);
       } else {

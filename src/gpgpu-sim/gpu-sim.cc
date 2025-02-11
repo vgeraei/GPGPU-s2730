@@ -1858,7 +1858,7 @@ void gpgpu_sim::cycle() {
 
         unsigned state_value = m_memory_sub_partition[i]->calculate_priority();
         // Custom add
-        // if (i == 12) {
+        // if ((gpu_sim_cycle + gpu_tot_sim_cycle) % 1000 == 0) {
         //   m_memory_sub_partition[i]->print_all_queues();
         // }
 
@@ -1931,7 +1931,17 @@ void gpgpu_sim::cycle() {
       // backed up) Note:This needs to be called in DRAM clock domain if there
       // is no L2 cache in the system In the worst case, we may need to push
       // SECTOR_CHUNCK_SIZE requests, so ensure you have enough buffer for them
-        if (m_memory_sub_partition[i]->full(SECTOR_CHUNCK_SIZE)) {
+        mem_fetch *mf_top = (mem_fetch *)icnt_top(m_shader_config->mem2device(i));
+        unsigned buffer_size = icnt_buffer_size(m_shader_config->mem2device(i));
+        // if ((gpu_sim_cycle + gpu_tot_sim_cycle) % 1000 == 0) {
+        //   fprintf(stdout, "Buffer size: %u \n", buffer_size);
+        // }
+        // fprintf(stdout, "The top is from: %u\n", mf_top->get_sid());
+        unsigned sid = 777;
+        // mem_fetch *mf_top = (mem_fetch *)icnt_pop(m_shader_config->mem2device(i));
+        if (mf_top)
+          sid = mf_top->get_sid();
+        if (m_memory_sub_partition[i]->full(SECTOR_CHUNCK_SIZE, sid)) {
           gpu_stall_dramfull++;
           // Custom add
           gpu_stall_dramfull_mem_sub_cumul[i]++;

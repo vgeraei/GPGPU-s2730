@@ -96,6 +96,29 @@ void* xbar_router::Pop(unsigned ouput_deviceID) {
   return data;
 }
 
+void* xbar_router::Top(unsigned output_deviceID) {
+  assert(output_deviceID < total_nodes);
+  void* data = NULL;
+
+  if (!out_buffers[output_deviceID].empty()) {
+    data = out_buffers[output_deviceID].front().data;
+    // No pop() here to retain the packet in the buffer
+  }
+
+  return data;
+}
+
+unsigned xbar_router::BufferSize(unsigned output_deviceID) {
+  assert(output_deviceID < total_nodes);
+  unsigned buffer_size = 0;
+
+  if (!out_buffers[output_deviceID].empty()) {
+    buffer_size = out_buffers[output_deviceID].size();
+  }
+
+  return buffer_size;
+}
+
 bool xbar_router::Has_Buffer_In(unsigned input_deviceID, unsigned size,
                                 bool update_counter) {
   assert(input_deviceID < total_nodes);
@@ -349,6 +372,23 @@ void* LocalInterconnect::Pop(unsigned ouput_deviceID) {
   if (ouput_deviceID < n_shader) subnet = 1;
 
   return net[subnet]->Pop(ouput_deviceID);
+}
+
+
+void* LocalInterconnect::Top(unsigned ouput_deviceID) {
+  // 0-_n_shader-1 indicates reply(network 1), otherwise request(network 0)
+  int subnet = 0;
+  if (ouput_deviceID < n_shader) subnet = 1;
+
+  return net[subnet]->Top(ouput_deviceID);
+}
+
+unsigned LocalInterconnect::BufferSize(unsigned ouput_deviceID) {
+  // 0-_n_shader-1 indicates reply(network 1), otherwise request(network 0)
+  int subnet = 0;
+  if (ouput_deviceID < n_shader) subnet = 1;
+
+  return net[subnet]->BufferSize(ouput_deviceID);
 }
 
 void LocalInterconnect::Advance() {

@@ -1248,8 +1248,10 @@ void baseline_cache::cycle(std::vector<bool> mc_states) {
         // mf->set_icnt_timestamp(m_gpu->gpu_tot_sim_cycle + m_gpu->gpu_sim_cycle);
         m_miss_queue.pop_front();
         m_memport->push(mf);
-
+        if (m_miss_queue.size() > 10) {
+          fprintf(stdout, "Core %u queue length is: %u\n", mf->get_sid(), m_miss_queue.size());
         }
+      }
     }
 
   }

@@ -161,7 +161,7 @@ class memory_sub_partition {
   void cache_cycle(unsigned cycle, std::vector<bool> mc_states);
 
   bool full() const;
-  bool full(unsigned size) const;
+  bool full(unsigned size, unsigned sid) const;
   void push(class mem_fetch *mf, unsigned long long clock_cycle);
   class mem_fetch *pop();
   class mem_fetch *top();
@@ -197,6 +197,7 @@ class memory_sub_partition {
   }
 
   // Custom add
+  unsigned get_icnt_L2_queue_kua_size() {return m_icnt_L2_queue_kua->get_size();}
   unsigned get_icnt_L2_queue_size() {return m_icnt_L2_queue->get_size();}
   unsigned get_L2_dram_queue_size() {return m_L2_dram_queue->get_size();}
   unsigned calculate_priority() {
@@ -208,14 +209,15 @@ class memory_sub_partition {
   
   // Custom add
   void print_all_queues() {
+    unsigned icnt_L2_kua_size = m_icnt_L2_queue_kua->get_size();
     unsigned icnt_L2_size = m_icnt_L2_queue->get_size();
     unsigned L2_dram_size = m_L2_dram_queue->get_size();
     unsigned dram_L2_size = m_dram_L2_queue->get_size();
     unsigned L2_icnt_size = m_L2_icnt_queue->get_size();
      
-     if (icnt_L2_size > 40 || L2_dram_size > 40 || dram_L2_size > 40 || L2_icnt_size > 40)
-      fprintf(stdout, "ICNT->L2: %u   L2->DRAM: %u   DRAM->L2: %u   L2->ICNT: %u \n", 
-        icnt_L2_size, L2_dram_size, dram_L2_size, L2_icnt_size);
+     if (icnt_L2_size > 10 || L2_dram_size > 10 || dram_L2_size > 10 || L2_icnt_size > 10)
+      fprintf(stdout, "ICNT->L2 KUA: %u   ICNT->L2: %u   L2->DRAM: %u   DRAM->L2: %u   L2->ICNT: %u \n", 
+        icnt_L2_kua_size, icnt_L2_size, L2_dram_size, dram_L2_size, L2_icnt_size);
   }
 
  private:
@@ -235,6 +237,10 @@ class memory_sub_partition {
   std::queue<rop_delay_t> m_rop;
 
   // these are various FIFOs between units within a memory partition
+  // Custom add
+
+
+  fifo_pipeline<mem_fetch> *m_icnt_L2_queue_kua;
   fifo_pipeline<mem_fetch> *m_icnt_L2_queue;
   fifo_pipeline<mem_fetch> *m_L2_dram_queue;
   fifo_pipeline<mem_fetch> *m_dram_L2_queue;

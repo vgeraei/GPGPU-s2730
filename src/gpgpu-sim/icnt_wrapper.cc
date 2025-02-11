@@ -37,6 +37,9 @@ icnt_init_p icnt_init;
 icnt_has_buffer_p icnt_has_buffer;
 icnt_push_p icnt_push;
 icnt_pop_p icnt_pop;
+// icnt_priority_pop_p icnt_priority_pop;
+icnt_top_p icnt_top;
+icnt_buffer_size_p icnt_buffer_size;
 icnt_transfer_p icnt_transfer;
 icnt_busy_p icnt_busy;
 icnt_display_stats_p icnt_display_stats;
@@ -72,6 +75,20 @@ static void intersim2_push(unsigned input, unsigned output, void* data,
 
 static void* intersim2_pop(unsigned output) {
   return g_icnt_interface->Pop(output);
+}
+
+// static void* intersim2_priority_pop(unsigned output) {
+//   return g_icnt_interface->PriorityPop(output);
+// }
+
+
+static void* intersim2_top(unsigned output) {
+  return g_icnt_interface->Top(output);
+}
+
+
+static unsigned intersim2_buffer_size(unsigned output) {
+  return g_icnt_interface->BufferSize(output);
 }
 
 static void intersim2_transfer() { g_icnt_interface->Advance(); }
@@ -112,6 +129,14 @@ static void LocalInterconnect_push(unsigned input, unsigned output, void* data,
 
 static void* LocalInterconnect_pop(unsigned output) {
   return g_localicnt_interface->Pop(output);
+}
+
+static void* LocalInterconnect_top(unsigned output) {
+  return g_localicnt_interface->Top(output);
+}
+
+static unsigned LocalInterconnect_buffer_size(unsigned output) {
+  return g_localicnt_interface->BufferSize(output);
 }
 
 static void LocalInterconnect_transfer() { g_localicnt_interface->Advance(); }
@@ -170,6 +195,9 @@ void icnt_wrapper_init() {
       icnt_has_buffer = intersim2_has_buffer;
       icnt_push = intersim2_push;
       icnt_pop = intersim2_pop;
+      // icnt_priority_pop = intersim2_priority_pop;
+      icnt_top = intersim2_top;
+      icnt_buffer_size = intersim2_buffer_size;
       icnt_transfer = intersim2_transfer;
       icnt_busy = intersim2_busy;
       icnt_display_stats = intersim2_display_stats;
@@ -184,6 +212,9 @@ void icnt_wrapper_init() {
       icnt_has_buffer = LocalInterconnect_has_buffer;
       icnt_push = LocalInterconnect_push;
       icnt_pop = LocalInterconnect_pop;
+      // icnt_priority_pop = LocalInterconnect_priority_pop;
+      icnt_top = LocalInterconnect_top;
+      icnt_buffer_size = LocalInterconnect_buffer_size;
       icnt_transfer = LocalInterconnect_transfer;
       icnt_busy = LocalInterconnect_busy;
       icnt_display_stats = LocalInterconnect_display_stats;

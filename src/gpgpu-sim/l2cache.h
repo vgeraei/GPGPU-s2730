@@ -206,6 +206,10 @@ class memory_sub_partition {
     return get_icnt_L2_queue_size();
     
     }
+
+  // bool determine_traffic_state() {
+  //   return (get_icnt_L2_queue_size() > 10 && get_L2_dram_queue_size());
+  // }
   
   // Custom add
   void print_all_queues() {

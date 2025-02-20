@@ -1206,32 +1206,47 @@ void baseline_cache::cycle(std::vector<bool> mc_states) {
     bool L1D_condition =  (m_name[0] == name_L1D[0] && m_name[1] == name_L1D[1] && m_name[2] == name_L1D[2]);
 
     // m_name[0] == name_L1D[0] && m_name[1] == name_L1D[1] && m_name[2] == name_L1D[2]
-    if (false) { 
-      // Implementing traffic injection profiling
-      // Custom add
-      for (std::list<mem_fetch*>::iterator item=m_miss_queue.begin(); item != m_miss_queue.end(); ++item) {
-        unsigned destination = (*item)->get_sub_partition_id();
-        if (mc_states[destination]) {
-          if (!m_memport->full((*item)->size(), (*item)->get_is_write())) {
+    // if (L1D_condition) { 
+    //   // Implementing traffic injection profiling
+    //   // Custom add
+    //   for (std::list<mem_fetch*>::iterator item=m_miss_queue.begin(); item != m_miss_queue.end(); ++item) {
+    //     unsigned destination = (*item)->get_sub_partition_id();
+    //     if (mc_states[destination]) {
+    //       if (!m_memport->full((*item)->size(), (*item)->get_is_write())) {
             
-            // m_miss_queue.pop_front();
-            m_miss_queue.erase(item);
-            m_memport->push((*item));
-            // m_memport->push(mf);
-            // m_gpu->gpu_tot_sim_cycle + m_gpu->gpu_sim_cycle
+    //         // m_miss_queue.pop_front();
+    //         m_miss_queue.erase(item);
+    //         m_memport->push((*item));
+    //         // m_memport->push(mf);
+    //         // m_gpu->gpu_tot_sim_cycle + m_gpu->gpu_sim_cycle
 
-            // (*item)->set_icnt_timestamp(m_gpu->gpu_tot_sim_cycle + m_gpu->gpu_sim_cycle);
-            m_stats.inc_L1_mem_req_pw();
+    //         // (*item)->set_icnt_timestamp(m_gpu->gpu_tot_sim_cycle + m_gpu->gpu_sim_cycle);
+    //         m_stats.inc_L1_mem_req_pw();
 
-          }
-          break;
-        } 
-        /*
-        else {
-          fprintf(stdout, "Busy MC %u\n", destination);
+    //       }
+    //       break;
+    //     } 
+    //     /*
+    //     else {
+    //       fprintf(stdout, "Busy MC %u\n", destination);
+    //     }
+    //     */
+    //   }
+    // } 
+    
+    if (L1D_condition) {
+      mem_fetch *mf = m_miss_queue.front();
+      if (!m_memport->full(mf->size(), mf->get_is_write())) {
+        unsigned destination = mf->get_sub_partition_id();
+        if (mc_states[destination] && mf->get_sid() != 0) {
+          m_miss_queue.pop_front();
+          m_memport->push(mf);
+        } else if (mf->get_sid() == 0) {
+          m_miss_queue.pop_front();
+          m_memport->push(mf);
         }
-        */
       }
+
     } else {
      
       
@@ -1248,9 +1263,9 @@ void baseline_cache::cycle(std::vector<bool> mc_states) {
         // mf->set_icnt_timestamp(m_gpu->gpu_tot_sim_cycle + m_gpu->gpu_sim_cycle);
         m_miss_queue.pop_front();
         m_memport->push(mf);
-        if (m_miss_queue.size() > 10) {
-          fprintf(stdout, "Core %u queue length is: %u\n", mf->get_sid(), m_miss_queue.size());
-        }
+        // if (m_miss_queue.size() > 10) {
+        //   fprintf(stdout, "Core %u queue length is: %u\n", mf->get_sid(), m_miss_queue.size());
+        // }
       }
     }
 

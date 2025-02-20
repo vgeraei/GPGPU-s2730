@@ -1846,8 +1846,6 @@ void gpgpu_sim::cycle() {
   unsigned partiton_reqs_in_parallel_per_cycle = 0;
   if (clock_mask & L2) {
     m_power_stats->pwr_mem_stat->l2_cache_stats[CURRENT_STAT_IDX].clear();
-
-
     // custom add
 
     // std::vector<unsigned> sub_partition_priorities;
@@ -1856,17 +1854,19 @@ void gpgpu_sim::cycle() {
         // sub_partition_indexes.push_back(i);
         // sub_partition_priorities.push_back(m_memory_sub_partition[i]->calculate_priority());
 
-        unsigned state_value = m_memory_sub_partition[i]->calculate_priority();
+        // unsigned state_value = m_memory_sub_partition[i]->calculate_priority();
+        unsigned buffer_size = icnt_buffer_size(m_shader_config->mem2device(i));
+        
         // Custom add
         // if ((gpu_sim_cycle + gpu_tot_sim_cycle) % 1000 == 0) {
         //   m_memory_sub_partition[i]->print_all_queues();
         // }
-
-
-        if (state_value > 10) {
+        
+        // Custom add: if SM 0 is not finished and other SMs are causing contention in the MC
+        if (buffer_size > 32 && m_cluster[0]->get_not_completed() && get_more_cta_left()) {
           mc_states[i] = false;
           // fprintf(stdout, "MC #%u is busy %u\n", i, state_value);
-        } else if (!mc_states[i]){
+        } else if (!mc_states[i]) {
           mc_states[i] = true;
         }
         /*
@@ -1955,7 +1955,6 @@ void gpgpu_sim::cycle() {
         m_memory_sub_partition[i]->accumulate_L2cache_stats(
             m_power_stats->pwr_mem_stat->l2_cache_stats[CURRENT_STAT_IDX]);
     }
-    
   }
   partiton_reqs_in_parallel += partiton_reqs_in_parallel_per_cycle;
   if (partiton_reqs_in_parallel_per_cycle > 0) {

@@ -1854,8 +1854,8 @@ void gpgpu_sim::cycle() {
         // sub_partition_indexes.push_back(i);
         // sub_partition_priorities.push_back(m_memory_sub_partition[i]->calculate_priority());
 
-        // unsigned state_value = m_memory_sub_partition[i]->calculate_priority();
-        unsigned buffer_size = icnt_buffer_size(m_shader_config->mem2device(i));
+        unsigned state_value = m_memory_sub_partition[i]->calculate_priority();
+        // unsigned buffer_size = icnt_buffer_size(m_shader_config->mem2device(i));
         
         // Custom add
         // if ((gpu_sim_cycle + gpu_tot_sim_cycle) % 1000 == 0) {
@@ -1863,7 +1863,7 @@ void gpgpu_sim::cycle() {
         // }
         
         // Custom add: if SM 0 is not finished and other SMs are causing contention in the MC
-        if (buffer_size > 32 && m_cluster[0]->get_not_completed() && get_more_cta_left()) {
+        if (state_value > 2 && m_cluster[0]->get_not_completed() && get_more_cta_left()) {
           mc_states[i] = false;
           // fprintf(stdout, "MC #%u is busy %u\n", i, state_value);
         } else if (!mc_states[i]) {

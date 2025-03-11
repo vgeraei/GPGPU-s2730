@@ -1861,9 +1861,19 @@ void gpgpu_sim::cycle() {
         // if ((gpu_sim_cycle + gpu_tot_sim_cycle) % 1000 == 0) {
         //   m_memory_sub_partition[i]->print_all_queues();
         // }
+
+        // if (state_value > 2) {
+        //   fprintf(stdout, "MC #%u is busy %u\n", i, state_value);
+        // }
+
+        // fprintf(stdout, "The value of the get_not_complete is: %u \n", m_cluster[0]->get_not_completed());
+
+        // if (get_more_cta_left()) {
+        //   fprintf(stdout, "More CTAs left still!\n");
+        // }
         
         // Custom add: if SM 0 is not finished and other SMs are causing contention in the MC
-        if (state_value > 2 && m_cluster[0]->get_not_completed() && get_more_cta_left()) {
+        if (state_value > 32 && m_cluster[0]->get_not_completed()) {
           mc_states[i] = false;
           // fprintf(stdout, "MC #%u is busy %u\n", i, state_value);
         } else if (!mc_states[i]) {

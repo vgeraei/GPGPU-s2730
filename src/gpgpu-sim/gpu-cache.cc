@@ -1245,6 +1245,13 @@ void baseline_cache::cycle(std::vector<bool> mc_states) {
           m_miss_queue.pop_front();
           m_memport->push(mf);
         }
+        
+        // else if (!mc_states[destination]) {
+        //   if (mf->get_sid() == 0)
+        //     fprintf(stdout, "Core 0 no problem!\n");
+        //   else
+        //     fprintf(stdout, "Core %u is stopped. \n", mf->get_sid());
+        // }
       }
 
     } else {

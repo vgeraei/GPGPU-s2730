@@ -1875,7 +1875,7 @@ void gpgpu_sim::cycle() {
         // }
         
         // Custom add: if SM 0 is not finished and other SMs are causing contention in the MC
-        if (state_value > 12 && m_cluster[0]->get_not_completed()) {
+        if (state_value > 32 && m_cluster[0]->get_not_completed()) {
           mc_states[i] = false;
           // fprintf(stdout, "MC #%u is busy %u\n", i, state_value);
         } else if (!mc_states[i]) {

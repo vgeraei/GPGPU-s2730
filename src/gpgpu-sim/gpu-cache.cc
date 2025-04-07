@@ -246,8 +246,8 @@ enum cache_request_status tag_array::probe(new_addr_type addr, unsigned &idx,
   // Custom add
   // fprintf(stdout, "Cache name is: %s \n", m_config.m_config_string);
   bool partitioning_cond = false;
-  if(mf) 
-    partitioning_cond = mf->is_in_l2();
+  // if(mf) 
+  //   partitioning_cond = mf->is_in_l2();
   
 
 

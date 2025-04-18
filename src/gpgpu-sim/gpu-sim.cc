@@ -742,7 +742,8 @@ void gpgpu_sim::decrement_kernel_latency() {
 kernel_info_t *gpgpu_sim::select_kernel() {
   if (m_running_kernels[m_last_issued_kernel] &&
       !m_running_kernels[m_last_issued_kernel]->no_more_ctas_to_run() &&
-      !m_running_kernels[m_last_issued_kernel]->m_kernel_TB_latency) {
+      !m_running_kernels[m_last_issued_kernel]->m_kernel_TB_latency &&
+      m_running_kernels[m_last_issued_kernel]->get_num_cores_running() < 1) { // Custom add: last condition to allocate each kernel to only one SM
     unsigned launch_uid = m_running_kernels[m_last_issued_kernel]->get_uid();
     if (std::find(m_executed_kernel_uids.begin(), m_executed_kernel_uids.end(),
                   launch_uid) == m_executed_kernel_uids.end()) {
@@ -759,7 +760,8 @@ kernel_info_t *gpgpu_sim::select_kernel() {
     unsigned idx =
         (n + m_last_issued_kernel + 1) % m_config.max_concurrent_kernel;
     if (kernel_more_cta_left(m_running_kernels[idx]) &&
-        !m_running_kernels[idx]->m_kernel_TB_latency) {
+        !m_running_kernels[idx]->m_kernel_TB_latency && 
+        m_running_kernels[idx]->get_num_cores_running() < 1) { // Custom add: last condition to allocate each kernel to only one SM
       m_last_issued_kernel = idx;
       m_running_kernels[idx]->start_cycle = gpu_sim_cycle + gpu_tot_sim_cycle;
       // record this kernel for stat print if it is the first time this kernel

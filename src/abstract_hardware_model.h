@@ -212,6 +212,11 @@ class kernel_info_t {
     assert(m_num_cores_running > 0);
     m_num_cores_running--;
   }
+  // Custom add
+  unsigned get_num_cores_running() {
+    return m_num_cores_running;
+  }
+
   bool running() const { return m_num_cores_running > 0; }
   bool done() const { return no_more_ctas_to_run() && !running(); }
   class function_info *entry() {

@@ -767,11 +767,12 @@ kernel_info_t *gpgpu_sim::select_kernel() {
       // record this kernel for stat print if it is the first time this kernel
       // is selected for execution
       unsigned launch_uid = m_running_kernels[idx]->get_uid();
-      assert(std::find(m_executed_kernel_uids.begin(),
+      if(std::find(m_executed_kernel_uids.begin(),
                        m_executed_kernel_uids.end(),
-                       launch_uid) == m_executed_kernel_uids.end());
+                       launch_uid) != m_executed_kernel_uids.end()) { // Custom add: removing this condition as an error
       m_executed_kernel_uids.push_back(launch_uid);
       m_executed_kernel_names.push_back(m_running_kernels[idx]->name());
+    }
 
       return m_running_kernels[idx];
     }
@@ -1776,7 +1777,7 @@ int gpgpu_sim::next_clock_domain(void) {
 }
 
 void gpgpu_sim::issue_block2core() {
-  unsigned last_issued = m_last_cluster_issue;
+  unsigned last_issued = -1; // Custom add to start over assigning kernels to SMs when streams are done
   for (unsigned i = 0; i < m_shader_config->n_simt_clusters; i++) {
     unsigned idx = (i + last_issued + 1) % m_shader_config->n_simt_clusters;
     unsigned num = m_cluster[idx]->issue_block2core();

@@ -68,6 +68,7 @@ class memory_partition_unit {
 
   bool busy() const;
 
+  // Custom add
   void cache_cycle(unsigned cycle, std::vector<bool> mc_states);
   void dram_cycle();
   void simple_dram_model_cycle();

@@ -897,6 +897,7 @@ void shader_core_ctx::decode() {
   }
 }
 
+// Custom add
 void shader_core_ctx::fetch(std::vector<bool> mc_states) {
   if (!m_inst_fetch_buffer.m_valid) {
     if (m_L1I->access_ready()) {
@@ -2315,6 +2316,7 @@ pipelined_simd_unit::pipelined_simd_unit(register_set *result_port,
   active_insts_in_pipeline = 0;
 }
 
+// Custom add
 void pipelined_simd_unit::cycle(std::vector<bool> mc_states) {
   if (!m_pipeline_reg[0]->empty()) {
     m_result_port->move_in(m_pipeline_reg[0]);
@@ -2655,7 +2657,7 @@ void ldst_unit::cycle(std::vector<bool> mc_states) {
       
     // Custom add
     // unsigned long long current_cycle = m_core->get_gpu()->gpu_sim_cycle +
-                                m_core->get_gpu()->gpu_tot_sim_cycle;
+                                // m_core->get_gpu()->gpu_tot_sim_cycle;
     
     /*
 

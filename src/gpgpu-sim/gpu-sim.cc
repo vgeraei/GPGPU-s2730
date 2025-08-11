@@ -1941,6 +1941,7 @@ void gpgpu_sim::cycle() {
           m_memory_sub_partition[i]->push(mf, gpu_sim_cycle + gpu_tot_sim_cycle);
           if (mf) partiton_reqs_in_parallel_per_cycle++;
         }
+        // Custom add
         m_memory_sub_partition[i]->cache_cycle(gpu_sim_cycle + gpu_tot_sim_cycle, mc_states);
         m_memory_sub_partition[i]->accumulate_L2cache_stats(
             m_power_stats->pwr_mem_stat->l2_cache_stats[CURRENT_STAT_IDX]);
@@ -1962,6 +1963,7 @@ void gpgpu_sim::cycle() {
     m_power_stats->pwr_mem_stat->core_cache_stats[CURRENT_STAT_IDX].clear();
     for (unsigned i = 0; i < m_shader_config->n_simt_clusters; i++) {
       if (m_cluster[i]->get_not_completed() || get_more_cta_left()) {
+        // Custom add
         m_cluster[i]->core_cycle(mc_states);
         *active_sms += m_cluster[i]->get_n_active_sms();
       }

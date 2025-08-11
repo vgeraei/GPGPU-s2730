@@ -1075,6 +1075,7 @@ class pipelined_simd_unit : public simd_function_unit {
                       shader_core_ctx *core);
 
   // modifiers
+  // Custom add
   virtual void cycle(std::vector<bool> mc_states);
   virtual void issue(register_set &source_reg);
   virtual unsigned get_active_lanes_in_pipeline();
@@ -2139,6 +2140,7 @@ class shader_core_ctx : public core_t {
 
   int test_res_bus(int latency);
   address_type next_pc(int tid) const;
+  // Custom add
   void fetch(std::vector<bool> mc_states);
   void register_cta_thread_exit(unsigned cta_num, kernel_info_t *kernel);
 
@@ -2321,6 +2323,7 @@ class simt_core_cluster {
                     const memory_config *mem_config, shader_core_stats *stats,
                     memory_stats_t *mstats);
 
+  // Custom add
   void core_cycle(std::vector<bool> mc_states);
   void icnt_cycle();
 

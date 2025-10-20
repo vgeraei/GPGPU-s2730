@@ -638,6 +638,7 @@ void memory_sub_partition::cache_cycle(unsigned cycle, std::vector<bool> mc_stat
           // L2 cache accepted request
           // Custom add: deleting a specific mf
           // m_icnt_L2_queue->pop_element(mf);
+        
           if (is_kua_queue_emptied)
               m_icnt_L2_queue_kua->pop();
           else

@@ -1950,6 +1950,7 @@ void gpgpu_sim::cycle() {
         //   fprintf(stdout, "Buffer size: %u \n", buffer_size);
         // }
         // fprintf(stdout, "The top is from: %u\n", mf_top->get_sid());
+        // Custom add
         unsigned sid = 777;
         // mem_fetch *mf_top = (mem_fetch *)icnt_pop(m_shader_config->mem2device(i));
         if (mf_top)

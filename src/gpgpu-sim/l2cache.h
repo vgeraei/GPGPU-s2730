@@ -161,6 +161,7 @@ class memory_sub_partition {
   void cache_cycle(unsigned cycle, std::vector<bool> mc_states);
 
   bool full() const;
+  // Custom add
   bool full(unsigned size, unsigned sid) const;
   void push(class mem_fetch *mf, unsigned long long clock_cycle);
   class mem_fetch *pop();
@@ -242,7 +243,6 @@ class memory_sub_partition {
 
   // these are various FIFOs between units within a memory partition
   // Custom add
-
 
   fifo_pipeline<mem_fetch> *m_icnt_L2_queue_kua;
   fifo_pipeline<mem_fetch> *m_icnt_L2_queue;

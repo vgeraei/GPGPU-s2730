@@ -40,6 +40,8 @@ typedef void (*icnt_push_p)(unsigned input, unsigned output, void* data,
                             unsigned int size);
 typedef void* (*icnt_pop_p)(unsigned output);
 // typedef void* (*icnt_priority_pop_p)(unsigned output);
+
+// Custom add
 typedef void* (*icnt_top_p)(unsigned output);
 typedef unsigned (*icnt_buffer_size_p)(unsigned output);
 typedef void (*icnt_transfer_p)();
@@ -56,6 +58,7 @@ extern icnt_has_buffer_p icnt_has_buffer;
 extern icnt_push_p icnt_push;
 extern icnt_pop_p icnt_pop;
 // extern icnt_priority_pop_p icnt_priority_pop;
+// Custom add
 extern icnt_top_p icnt_top;
 extern icnt_buffer_size_p icnt_buffer_size;
 extern icnt_transfer_p icnt_transfer;

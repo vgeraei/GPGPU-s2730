@@ -96,6 +96,7 @@ void* xbar_router::Pop(unsigned ouput_deviceID) {
   return data;
 }
 
+// Custom add
 void* xbar_router::Top(unsigned output_deviceID) {
   assert(output_deviceID < total_nodes);
   void* data = NULL;
@@ -374,7 +375,7 @@ void* LocalInterconnect::Pop(unsigned ouput_deviceID) {
   return net[subnet]->Pop(ouput_deviceID);
 }
 
-
+// Custom add
 void* LocalInterconnect::Top(unsigned ouput_deviceID) {
   // 0-_n_shader-1 indicates reply(network 1), otherwise request(network 0)
   int subnet = 0;

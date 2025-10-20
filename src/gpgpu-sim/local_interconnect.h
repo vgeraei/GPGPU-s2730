@@ -58,6 +58,7 @@ class xbar_router {
   void Push(unsigned input_deviceID, unsigned output_deviceID, void* data,
             unsigned int size);
   void* Pop(unsigned ouput_deviceID);
+  // Custom add
   void* Top(unsigned ouput_deviceID);
   unsigned BufferSize(unsigned ouput_deviceID);
   void Advance();
@@ -121,6 +122,7 @@ class LocalInterconnect {
   void Push(unsigned input_deviceID, unsigned output_deviceID, void* data,
             unsigned int size);
   void* Pop(unsigned ouput_deviceID);
+  // Custom add
   void* Top(unsigned ouput_deviceID);
   void Advance();
   bool Busy() const;

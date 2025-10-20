@@ -38,6 +38,7 @@ icnt_has_buffer_p icnt_has_buffer;
 icnt_push_p icnt_push;
 icnt_pop_p icnt_pop;
 // icnt_priority_pop_p icnt_priority_pop;
+// Custom add
 icnt_top_p icnt_top;
 icnt_buffer_size_p icnt_buffer_size;
 icnt_transfer_p icnt_transfer;
@@ -81,7 +82,7 @@ static void* intersim2_pop(unsigned output) {
 //   return g_icnt_interface->PriorityPop(output);
 // }
 
-
+// Custom add
 static void* intersim2_top(unsigned output) {
   return g_icnt_interface->Top(output);
 }
@@ -131,6 +132,7 @@ static void* LocalInterconnect_pop(unsigned output) {
   return g_localicnt_interface->Pop(output);
 }
 
+// Custom add
 static void* LocalInterconnect_top(unsigned output) {
   return g_localicnt_interface->Top(output);
 }
@@ -196,6 +198,7 @@ void icnt_wrapper_init() {
       icnt_push = intersim2_push;
       icnt_pop = intersim2_pop;
       // icnt_priority_pop = intersim2_priority_pop;
+      // Custom add
       icnt_top = intersim2_top;
       icnt_buffer_size = intersim2_buffer_size;
       icnt_transfer = intersim2_transfer;
@@ -213,6 +216,7 @@ void icnt_wrapper_init() {
       icnt_push = LocalInterconnect_push;
       icnt_pop = LocalInterconnect_pop;
       // icnt_priority_pop = LocalInterconnect_priority_pop;
+      // Custom add
       icnt_top = LocalInterconnect_top;
       icnt_buffer_size = LocalInterconnect_buffer_size;
       icnt_transfer = LocalInterconnect_transfer;
